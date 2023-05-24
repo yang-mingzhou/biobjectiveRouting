@@ -6,3 +6,4 @@ namoadr
 Maps/*.txt
 dfs_100_pair/output
 dfs_100_pair/test
+dfs_100_pair/output/*.output
