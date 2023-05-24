@@ -14,5 +14,4 @@ void testPathRetrieval() {
 int main(){
     testPathRetrieval();
     return 0;
-
 }

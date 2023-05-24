@@ -1,0 +1,8 @@
+obj/*.o
+boa
+bod
+namoadr
+.vscode/*
+Maps/*.txt
+dfs_100_pair/output
+dfs_100_pair/test
