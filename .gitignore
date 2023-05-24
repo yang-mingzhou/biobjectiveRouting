@@ -9,3 +9,4 @@ dfs_100_pair/test
 dfs_100_pair/output/*.output
 *.sbatch
 output
+src/*.o
