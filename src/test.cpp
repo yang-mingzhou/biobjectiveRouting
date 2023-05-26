@@ -42,6 +42,19 @@ void test_readBoundaryNode(){
 
 }
 
+void test_boundaryPathDominanceCheck(){
+    array<int, 4> lub1 = {10, 20, 30, 40};
+    vector<int> path1 = {5, 6, 7, 8};
+
+    BoundaryPath bp1(lub1, path1);
+
+    array<int, 4> lub2 = {9, 10, 11, 12};
+    vector<int> path1 = {13, 14, 15, 16};
+
+    MyClass obj2(arr2, vec2);
+
+}
+
 int main() {
     // Run the test functions
     // test_readFragementIndex();

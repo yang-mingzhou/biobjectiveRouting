@@ -83,10 +83,30 @@ vector<BoundaryPath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dB
 vector<BoundaryPath> boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
     // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
     vector<BoundaryPath> paretoBoundaryPath;
+    BoundaryPath currentPath, comparedPath;
+    vector<int> paretoIndex(boundaryPathSet.size(), 1);
+
+    for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
+        if (paretoIndex[i]==1){
+            currentPath = boundaryPathSet[i];
+            for (size_t j = i+1; j < boundaryPathSet.size(); ++j){
+                comparedPath = boundaryPathSet[j];
+                if currentPath.isDominatedBy(comparedPath){
+                    paretoIndex[i]==0;
+                }
+                elif comparedPath.isDominatedBy(currentPath){
+                    paretoIndex[j]==0;
+                }
+            }   
+        }
+        if (paretoIndex[i]==1){
+            paretoBoundaryPath.push_back(currentPath);
+        }
+    }
     return paretoBoundaryPath;
 }
 
-vector<vector<int>> paretoBoundaryPathBetween(int snode, int dnode){
+vector<BoundaryPath> paretoBoundaryPathBetween(int snode, int dnode){
     vector<BoundaryPath> boundaryPathSet;
     vector<BoundaryPath> paretoBoundaryPathSet;
     int sBN, dBN;

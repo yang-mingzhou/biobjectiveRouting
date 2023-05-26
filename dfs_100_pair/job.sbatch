@@ -5,12 +5,16 @@
 #SBATCH -e output/dfs_%j.error ## error log
 #SBATCH --nodes=1
 #SBATCH --ntasks=128
-#SBATCH --time=10:00:00
-#SBATCH --tmp=5g
+#SBATCH --time=3:00:00
+#SBATCH --tmp=3g
 #SBATCH --mem=128g
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=yang7492@umn.edu
 #SBATCH -p amdsmall                                             
 
-gcc -std=c++11 -o dfs fixed.cpp -lstdc++
+gcc -pg -O3 -std=c++11 -o dfs map_of_map_no_print.cpp -lstdc++
 ./dfs
+gprof dfs gmon.out > profile.txt
+
+
+
