@@ -15,24 +15,7 @@ using namespace std;
 // module load gcc/11.3.0
 // gcc -std=c99 -o main.o hbor.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
 
-class BoundaryPath {
-    // for each boundaryPath, the lub: four elements are (LB1, LB2, UB1, UB2); path: a sequence of boundary nodes
-    public:
-    BoundaryPath(const array<int, 4>& bounds, const vector<int>& pathSequence)
-        : lub(bounds), path(pathSequence) {}
 
-    bool isDominatedBy(const BoundaryPath& other) const {
-        // Compare the elements of lub
-        if (lub[0] >= other.lub[2] && lub[1] >= other.lub[3]) {
-            if (!(lub[0] == other.lub[2] && lub[1] == other.lub[3])) {
-                return true;
-            }
-        }
-        return false;
-    }
-    array<int, 4> lub;
-    vector<int> path;
-};
 
 vector<array<int, 2>> readFragementIndex(const char* fragmentIndexFilename){
     ifstream fin(fragmentIndexFilename);
@@ -74,28 +57,25 @@ vector<vector<int>> readBoundaryNode(const char* boundaryNodeFileName){
 }
 
 vector<BoundaryPath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN){
-    
     vector<BoundaryPath> onePairBoundaryPath;
     return onePairBoundaryPath;
 }
-
 
 vector<BoundaryPath> boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
     // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
     vector<BoundaryPath> paretoBoundaryPath;
     BoundaryPath currentPath, comparedPath;
     vector<int> paretoIndex(boundaryPathSet.size(), 1);
-
     for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
         if (paretoIndex[i]==1){
             currentPath = boundaryPathSet[i];
             for (size_t j = i+1; j < boundaryPathSet.size(); ++j){
                 comparedPath = boundaryPathSet[j];
-                if currentPath.isDominatedBy(comparedPath){
-                    paretoIndex[i]==0;
+                if (currentPath.isDominatedBy(comparedPath)){
+                    paretoIndex[i]=0;
                 }
-                elif comparedPath.isDominatedBy(currentPath){
-                    paretoIndex[j]==0;
+                if (comparedPath.isDominatedBy(currentPath)){
+                    paretoIndex[j]=0;
                 }
             }   
         }
@@ -129,12 +109,12 @@ vector<BoundaryPath> paretoBoundaryPathBetween(int snode, int dnode){
     return paretoBoundaryPathSet;
 }
 
-vector<array<int, 2>> expandPathCostOf(vector<int> boundaryPath){
+vector<array<int, 2>> expandPathCostOf(BoundaryPath boundaryPath){
     vector<array<int, 2>> pathCostSet;
     return pathCostSet;
 }
 
-vector<array<int, 2>> expandPathForBoundaryPathSet(vector<vector<int>> boundaryPathSet){
+vector<array<int, 2>> expandPathForBoundaryPathSet(vector<BoundaryPath> boundaryPathSet){
     vector<array<int, 2>> expendedPathCostSet;
     for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
         vector<array<int, 2>> pathCostWithOneBoundaryPath = expandPathCostOf(boundaryPathSet[i]);
@@ -150,7 +130,7 @@ vector<array<int, 2>> dominanceCheck(vector<array<int, 2>> superParetoCostSet){
 
 
 int hbor(int snode, int dnode, const char* filename){
-    vector<vector<int>> boundaryPathSet = paretoBoundaryPathBetween(snode, dnode);
+    vector<BoundaryPath> boundaryPathSet = paretoBoundaryPathBetween(snode, dnode);
     vector<array<int, 2>> superParetoCostSet = expandPathForBoundaryPathSet(boundaryPathSet);
     vector<array<int, 2>> solutions = dominanceCheck(superParetoCostSet); 
     int nsolutions = solutions.size();

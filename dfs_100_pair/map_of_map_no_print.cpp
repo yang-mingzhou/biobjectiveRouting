@@ -46,10 +46,10 @@ input: The input is the s_node, d_node, cost1 and cost2 of the path with the exp
 output: True or False
 
 function:
-compare the paths generated from DFS with the existingLUBs. If cost1 and cost2 are both greater or one same one greater than the cost3 and cost4 with s_node and d_node pair in the existingLUBs, return true. Otherwise, return false.
+compare the paths generated from DFS with the existingLUBs. If cost1 and cost2 are both greater or one same one greater than the cost3 and cost4 with s_node and d_node pair in the existingLUBs, return true. Otherwise, return false. 
 */
 
-bool isDominated(int s_node, int expand_node, int d_node, int cost1, int cost2, int s2d_cost3, int s2d_cost4, unordered_map<int, vector<vector<int>>> existingLUBs) {
+bool isDominated(int s_node, int expand_node, int d_node, int cost1, int cost2, int s2d_cost3, int s2d_cost4, unordered_map<int, vector<vector<int>>> existingLUBs) {  
 
     //if (existingLUBs.count(expandd
 
@@ -78,7 +78,7 @@ bool isDominated(int s_node, int expand_node, int d_node, int cost1, int cost2, 
         }
     }
     return true;
-
+                
 }
 
 
@@ -120,12 +120,12 @@ unordered_map<int, unordered_map<int, vector<int>>> createAdjNodes(vector< vecto
 }
 
 
-bool isDominated_for_all_nodes(int expanded_node, vector<vector<int>> cost_record, vector<int> cur_s2e_cost, vector<int> path, unordered_map<int, unordered_map<int, vector<int>>> existingLUBs) {
+bool isDominated_for_all_nodes(int expanded_node, vector<vector<int>> cost_record, vector<int> cur_s2e_cost, vector<int> path, unordered_map<int, unordered_map<int, vector<int>>>& existingLUBs) {
 
     for (int i=0; i<cost_record.size(); i++) {
         int c2e_ccost1 = cur_s2e_cost[0] - cost_record[i][0];
         int c2e_ccost2 = cur_s2e_cost[1] - cost_record[i][1];
-
+        
         int c2e_excost3 = existingLUBs.at(path[i]).at(expanded_node)[2];
         int c2e_excost4 = existingLUBs.at(path[i]).at(expanded_node)[3];
 
@@ -139,8 +139,8 @@ bool isDominated_for_all_nodes(int expanded_node, vector<vector<int>> cost_recor
     return false;
 }
 
-bool isDominated_for_a_star(int expanded_node, int dest_node, int s2d_excost3, int s2d_excost4, vector<int> s2e_curcost, unordered_map<int, unordered_map<int, vector<int>>> existingLUBs) {
-
+bool isDominated_for_a_star(int expanded_node, int dest_node, int s2d_excost3, int s2d_excost4, vector<int> s2e_curcost, unordered_map<int, unordered_map<int, vector<int>>>& existingLUBs) {
+    
 
     int e2d_excost1 = existingLUBs.at(expanded_node).at(dest_node)[0];
     int e2d_excost2 = existingLUBs.at(expanded_node).at(dest_node)[1];
@@ -153,32 +153,33 @@ bool isDominated_for_a_star(int expanded_node, int dest_node, int s2d_excost3, i
 }
 
 
-/*
+/* 
  * input: current start_node, dest_node, current path from s_node, current total cost, edge index, LUBs, and vector of vector storing all path
- *
+ * 
  * function: recursive function to find all paths between specified nodes through DFS.
  */
 
-void DFS(int cur_node, int dest_node, int s2d_c3, int s2d_c4, vector<int> path, vector<vector<int>> cost, vector<int> cur_cost, const unordered_map<int, unordered_map<int, vector<int>>> & adjNodes, const unordered_map<int, unordered_map<int, vector<int>>> & existingLUBs, vector<vector<int>> *all_paths)
+void DFS(int cur_node, int dest_node, int s2d_c3, int s2d_c4, vector<int> path, vector<vector<int>> cost, vector<int> cur_cost, unordered_map<int, unordered_map<int, vector<int>>>& adjNodes, unordered_map<int, unordered_map<int, vector<int>>>& existingLUBs, vector<vector<int>> *all_paths)
 {
     path.push_back(cur_node);
     cost.push_back(cur_cost);
-
+    
     cout << "path->";
     for (int i=0; i<path.size(); i++) {
         cout << path[i] << "->";
     }
     cout << endl;
+    unordered_map<int, vector<int>> cur_node_adj = adjNodes[cur_node];
 
-    for (auto it = adjNodes[cur_node].begin(); it != adjNodes[cur_node].end(); ++it) {
+    for (auto it = cur_node_adj.begin(); it != cur_node_adj.end(); ++it) {
         int expanded = it->first;
         // if current node has not been visited
         if (find(path.begin(), path.end(), expanded) == path.end()){
             // update cost
-            vector <int> this_cost = {cost[cost.size()-1][0]+adjNodes[cur_node].at(expanded)[0],
-                                      cost[cost.size()-1][1]+adjNodes[cur_node].at(expanded)[1],
-                                      cost[cost.size()-1][2]+adjNodes[cur_node].at(expanded)[2],
-                                      cost[cost.size()-1][3]+adjNodes[cur_node].at(expanded)[3]};
+            vector <int> this_cost = {cost[cost.size()-1][0]+cur_node_adj.at(expanded)[0],
+                                      cost[cost.size()-1][1]+cur_node_adj.at(expanded)[1],
+                                      cost[cost.size()-1][2]+cur_node_adj.at(expanded)[2],
+                                      cost[cost.size()-1][3]+cur_node_adj.at(expanded)[3]};
 
             if (!isDominated_for_a_star(expanded, dest_node, s2d_c3, s2d_c4, this_cost, existingLUBs)){
                 if (!isDominated_for_all_nodes(expanded, cost, this_cost, path, existingLUBs)) {
@@ -232,7 +233,7 @@ vector<vector<int>> traverse(int s_node, int d_node, int s2d_ub1, int s2d_ub2, u
 
 /*
 input:
-The format of the map is a 2-d vector. The first dimension is the edges of the map, and the second dimension is the s_node, d_node, cost1 to cost4.
+The format of the map is a 2-d vector. The first dimension is the edges of the map, and the second dimension is the s_node, d_node, cost1 to cost4. 
 
 output: Save all the obtained paths of all pairs of nodes.
 
@@ -260,7 +261,7 @@ vector<vector<int>> allPairs(vector<vector<int>> mapData, vector<vector<int>>Exi
     for (int i=0; i<key_nodes.size()-1; i++) {
         for (int j=i+1; j<key_nodes.size(); j++) {
             vector<vector<int>> this_pair_paths = traverse(key_nodes[i], key_nodes[j], s2d_cost3, s2d_cost4, adj_nodes, existings);
-
+            
             allpair_paths.insert(allpair_paths.end(), this_pair_paths.begin(), this_pair_paths.end());
         }
     }
@@ -299,10 +300,10 @@ int main() {
         key_nodes.push_back(pair.first);
     }
     sort(key_nodes.begin(), key_nodes.end());
-    clock_t end = clock();
+    clock_t end = clock(); 
     std::cout << "duration = " << (double)(end - start) / CLOCKS_PER_SEC << "sec.\n";
     cout << "adjNodes size =" << key_nodes.size() << endl;
-
+    
     vector<vector<int>> allpath;
 
     vector<double> time_list;
@@ -310,12 +311,12 @@ int main() {
     for (int i=0; i<1; i++) {
         int rand_num1 = rand() % (key_nodes.size()+1);
         int rand_num2 = rand_num1 + rand() % (key_nodes.size() - rand_num1 +1);
-        rand_num1 = 123;
-        rand_num2 = 145;
+        // rand_num1 = 123;
+        // rand_num2 = 145;
         int s_node_id = key_nodes[rand_num1];
         int d_node_id = key_nodes[rand_num2];
-        // s_node_id = 23618;
-        // d_node_id = 119416;
+        //s_node_id = 23618;
+        //d_node_id = 119416;
         s_node_id = 406788;
         d_node_id = 413550;
         cout << endl;

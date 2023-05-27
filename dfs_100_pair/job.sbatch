@@ -12,9 +12,5 @@
 #SBATCH --mail-user=yang7492@umn.edu
 #SBATCH -p amdsmall                                             
 
-gcc -pg -O3 -std=c++11 -o dfs map_of_map_no_print.cpp -lstdc++
+gcc -O3 -std=c++11 -o dfs map_of_map_no_print.cpp -lstdc++
 ./dfs
-gprof dfs gmon.out > profile.txt
-
-
-
