@@ -13,7 +13,8 @@ using namespace std;
 
 void test_readFragementIndex() {
     // tested
-    vector<array<int, 2>>  result = readFragementIndex("../b3hepv/fragmentIndex.txt");
+    B3HEPV hepv = B3HEVP("../b3hepv");
+    vector<array<int, 2>>  result = hepv.fragmentIndex;
     for (size_t i = 0; i < result.size(); ++i) {
         cout << "For node" << i+1 << ": Fragment ID "<< result[i][0] << ", Fragment node ID: "<< result[i][1] <<"\n";
         
@@ -25,7 +26,8 @@ void test_readFragementIndex() {
 
 void test_readBoundaryNode(){
     // tested
-    vector<vector<int>> matrix = readBoundaryNode("../b3hepv/boundaryNodes.txt");
+    B3HEPV hepv = B3HEVP("../b3hepv");
+    vector<vector<int>> matrix = hepv.boundaryNodeSet;
     cout<< "start";
     for (const auto& row : matrix) {
         for (int num : row) {
@@ -60,7 +62,7 @@ void test_boundaryPathDominanceCheck(){
         boundaryPath.printPath();
     }
 
-    vector<BoundaryPath> paretoBoundaryPath = boundaryPathDominanceCheck(boundaryPathSet);
+    vector<BoundaryPath> paretoBoundaryPath = B3HEPV::boundaryPathDominanceCheck(boundaryPathSet);
     cout<< "after:" <<endl;
     for (const BoundaryPath& boundaryPath: paretoBoundaryPath) {
         boundaryPath.printPath();
@@ -70,10 +72,10 @@ void test_boundaryPathDominanceCheck(){
 }
 
 void testHbor(){
-    const char* filename = "../b3hepv/testImputGraph.txt";
+    B3HEPV hepv = B3HEVP("../b3hepv");
     int snode = 1;
     int dnode = 8;
-    int nsolutions = boaPathRetrieval(snode, dnode, filename);
+    int nsolutions = B3HEPV::boaPathRetrieval(snode, dnode);
     cout << "The number of solution between: " << snode << " and "<< dnode << " is "<< nsolutions <<endl;
 }
 
