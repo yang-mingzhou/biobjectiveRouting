@@ -13,7 +13,7 @@ using namespace std;
 
 void test_readFragementIndex() {
     // tested
-    B3HEPV hepv = B3HEVP("../b3hepv");
+    B3HEPV hepv = B3HEPV("../b3hepv");
     vector<array<int, 2>>  result = hepv.fragmentIndex;
     for (size_t i = 0; i < result.size(); ++i) {
         cout << "For node" << i+1 << ": Fragment ID "<< result[i][0] << ", Fragment node ID: "<< result[i][1] <<"\n";
@@ -26,7 +26,7 @@ void test_readFragementIndex() {
 
 void test_readBoundaryNode(){
     // tested
-    B3HEPV hepv = B3HEVP("../b3hepv");
+    B3HEPV hepv = B3HEPV("../b3hepv");
     vector<vector<int>> matrix = hepv.boundaryNodeSet;
     cout<< "start";
     for (const auto& row : matrix) {
@@ -52,7 +52,6 @@ void test_boundaryPathDominanceCheck(){
     vector<int> path3 = {5, 40, 15, 8};
     BoundaryPath bp3(lub3, path3);
 
-    cout<< bp3.isDominatedBy(bp2)<< endl;
 
     vector<BoundaryPath> boundaryPathSet = {bp1, bp2, bp3};
 
@@ -62,7 +61,9 @@ void test_boundaryPathDominanceCheck(){
         boundaryPath.printPath();
     }
 
-    vector<BoundaryPath> paretoBoundaryPath = B3HEPV::boundaryPathDominanceCheck(boundaryPathSet);
+    B3HEPV hepv = B3HEPV("../b3hepv");
+
+    vector<BoundaryPath> paretoBoundaryPath = hepv.boundaryPathDominanceCheck(boundaryPathSet);
     cout<< "after:" <<endl;
     for (const BoundaryPath& boundaryPath: paretoBoundaryPath) {
         boundaryPath.printPath();
@@ -72,17 +73,19 @@ void test_boundaryPathDominanceCheck(){
 }
 
 void testHbor(){
-    B3HEPV hepv = B3HEVP("../b3hepv");
+    B3HEPV hepv = B3HEPV("../b3hepv");
     int snode = 1;
     int dnode = 8;
-    int nsolutions = B3HEPV::boaPathRetrieval(snode, dnode);
+    int nsolutions = 0;
+    // int nsolutions = B3HEPV::boaPathRetrieval(snode, dnode);
     cout << "The number of solution between: " << snode << " and "<< dnode << " is "<< nsolutions <<endl;
 }
 
 int main() {
     // Run the test functions
     // test_readFragementIndex();
-    // testHbor();
+    // test_readBoundaryNode();
     test_boundaryPathDominanceCheck();
+    // testHbor();
     return 0;
 }

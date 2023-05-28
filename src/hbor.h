@@ -33,6 +33,7 @@ class B3HEPV {
     vector<BoundaryPath> boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet);
     vector<BoundaryPath> paretoBoundaryPathBetween(int snode, int dnode);
     vector<array<int, 2>> expandPathCostOf(BoundaryPath boundaryPath);
+    vector<array<int, 2>> pathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
     vector<array<int, 2>> expandPathForBoundaryPathSet(vector<BoundaryPath> boundaryPathSet);
     vector<array<int, 2>> dominanceCheck(vector<array<int, 2>> superParetoCostSet);
     int hbor(int snode, int dnode);
