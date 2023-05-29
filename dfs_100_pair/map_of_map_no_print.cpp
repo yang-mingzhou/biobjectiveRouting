@@ -5,8 +5,11 @@
 #include <unordered_map>
 #include <algorithm>
 #include <time.h>
+#include "json.hpp"
 
 using namespace std;
+using json = nlohmann::json;
+
 /*
 input: The name of the file to be read.
 output: A vector of vectors storing the content of the .txt file.
@@ -144,7 +147,6 @@ bool isDominated_for_a_star(int expanded_node, int dest_node, int s2d_excost3, i
 
     int e2d_excost1 = existingLUBs.at(expanded_node).at(dest_node)[0];
     int e2d_excost2 = existingLUBs.at(expanded_node).at(dest_node)[1];
-
     if (s2e_curcost[0]+e2d_excost1 < s2d_excost3 || s2e_curcost[1]+e2d_excost2 < s2d_excost4) {
         return false;
     } else {
@@ -219,10 +221,8 @@ Use DFS to traverse all possible paths among one pair of nodes(s_node, d_node) o
 vector<vector<int>> traverse(int s_node, int d_node, int s2d_ub1, int s2d_ub2, unordered_map<int, unordered_map<int, vector<int>>> adjNodes, unordered_map<int, unordered_map<int, vector<int>>> Existing_LUBs)
 {
     vector<int> cur_path;
-    //vector<int> cur_cost = {0, 0, 0, 0};
     vector<vector<int>> cur_cost;
     vector<int> start_cost = {0, 0, 0, 0};
-    //cur_cost.push_back(start_cost);
 
     vector<vector<int>> *all_paths = new vector<vector<int>>();
     DFS(s_node, d_node, s2d_ub1, s2d_ub2, cur_path, cur_cost, start_cost, adjNodes, Existing_LUBs, all_paths);
@@ -253,13 +253,13 @@ vector<vector<int>> allPairs(vector<vector<int>> mapData, vector<vector<int>>Exi
     }
     sort(key_nodes.begin(), key_nodes.end());
 
-    // Fix this later!!!
-    int s2d_cost3 = 4000000;
-    int s2d_cost4 = 6000000;
-
     // enumerate all pairs
     for (int i=0; i<key_nodes.size()-1; i++) {
         for (int j=i+1; j<key_nodes.size(); j++) {
+
+            int s2d_cost3 = existings.at(key_nodes[i]).at(key_nodes[j])[2];
+            int s2d_cost4 = existings.at(key_nodes[i]).at(key_nodes[j])[3];
+
             vector<vector<int>> this_pair_paths = traverse(key_nodes[i], key_nodes[j], s2d_cost3, s2d_cost4, adj_nodes, existings);
             
             allpair_paths.insert(allpair_paths.end(), this_pair_paths.begin(), this_pair_paths.end());
@@ -269,23 +269,59 @@ vector<vector<int>> allPairs(vector<vector<int>> mapData, vector<vector<int>>Exi
 }
 
 
-void save_all_path(vector<vector<int>> allpath) {
-    ofstream myfile;
-    myfile.open("all_paths.txt");
-    for (int i=0; i<allpath.size(); i++){
-        for (int j=0; j<allpath[i].size(); j++) {
-            myfile << (allpath)[i][j] << " ";
+void save_all_path(vector<vector<int>> allpath, string filetype) {
+    if (filetype=="txt"){
+        ofstream myfile;
+        myfile.open("all_paths.txt");
+        for (int i=0; i<allpath.size(); i++){
+            for (int j=0; j<allpath[i].size(); j++) {
+                myfile << (allpath)[i][j] << " ";
+            }
+            myfile << "\n";
         }
-        myfile << "\n";
+        myfile.close();
+    } else {
+        
+        json s_node_key;
+        for (int i=0; i<allpath.size(); i++){
+            json d_node_key;
+            string s_node = to_string(allpath[i][4]);
+            string d_node = to_string(allpath[i][5]);
+            allpath[i].erase(allpath[i].begin()+4, allpath[i].begin()+6);
+            vector<vector<int>> temp;
+            temp.push_back(allpath[i]);
+            // if there is no s_node as a key in json 
+            if (!s_node_key.contains(s_node)){
+                d_node_key[d_node] = temp;
+                s_node_key[s_node] = d_node_key;
+            } else {
+                // if there is a s_node as a key but no d_node as a key
+                if (!s_node_key[s_node].contains(d_node)){
+                    s_node_key[s_node][d_node] = temp;
+                // if both s_node and d_noe exists as a key in json
+                } else {
+                    s_node_key[s_node][d_node].push_back(allpath[i]);
+                }
+            }
+        }
+
+        ofstream jsonfile("all_paths.json");
+        jsonfile << s_node_key.dump(4);
+        jsonfile.close();
+        
+
     }
-    myfile.close();
 }
 
 
 int main() {
     clock_t start = clock();
-    vector< vector<int> > mapData = fileToVector("test/Adjacent_LUBs.txt");
-    vector< vector<int> > existingLUBs = fileToVector("test/Existing_LUBs.txt");
+    vector< vector<int> > mapData = fileToVector("test2/adjacent_LUBs.txt");
+    vector< vector<int> > existingLUBs = fileToVector("test2/existingLUB.txt");
+
+    vector<vector<int>> allpath = allPairs(mapData, existingLUBs);
+
+    /*
 
     //vector<vector<int>> allpath = allPairs(mapData, existingLUBs);
 
@@ -308,17 +344,19 @@ int main() {
 
     vector<double> time_list;
     double total = 0;
-    for (int i=0; i<1; i++) {
+
+    
+    for (int i=0; i<100; i++) {
         int rand_num1 = rand() % (key_nodes.size()+1);
         int rand_num2 = rand_num1 + rand() % (key_nodes.size() - rand_num1 +1);
-        // rand_num1 = 123;
-        // rand_num2 = 145;
+        rand_num1 = 123;
+        rand_num2 = 145;
         int s_node_id = key_nodes[rand_num1];
         int d_node_id = key_nodes[rand_num2];
         //s_node_id = 23618;
         //d_node_id = 119416;
-        s_node_id = 406788;
-        d_node_id = 413550;
+        // s_node_id = 406788;
+        // d_node_id = 413550;
         cout << endl;
         cout << "random number : " << rand_num1 << " " << rand_num2 << endl;
         cout << "node:" << s_node_id << endl;
@@ -336,8 +374,11 @@ int main() {
         time_list.push_back(time);
         cout << endl;
     }
+    */
 
-    cout << "average time: " << total << endl;
+    save_all_path(allpath, "json");
+
+    //cout << "average time: " << total << endl;
 
     for (int i=0; i<allpath.size(); i++){
         for (int j=0; j<allpath[i].size(); j++) {

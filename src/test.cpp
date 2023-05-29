@@ -40,15 +40,15 @@ void test_readBoundaryNode(){
 
 void test_boundaryPathDominanceCheck(){
     // tested
-    array<int, 4> lub1 = {10, 20, 30, 40};
+    vector<int> lub1 = {10, 20, 30, 40};
     vector<int> path1 = {5, 6, 7, 8};
     BoundaryPath bp1(lub1, path1);
     
-    array<int, 4> lub2 = {20, 10, 40, 30};
+    vector<int> lub2 = {20, 10, 40, 30};
     vector<int> path2 = {5, 14, 15, 8};
     BoundaryPath bp2(lub2, path2);
 
-    array<int, 4> lub3 = {50, 60, 110, 120};
+    vector<int> lub3 = {50, 60, 110, 120};
     vector<int> path3 = {5, 40, 15, 8};
     BoundaryPath bp3(lub3, path3);
 
@@ -68,24 +68,83 @@ void test_boundaryPathDominanceCheck(){
     for (const BoundaryPath& boundaryPath: paretoBoundaryPath) {
         boundaryPath.printPath();
     }
-    
-
 }
 
-void testHbor(){
+void test_ReadBoundaryPathView(){
+    // tested
     B3HEPV hepv = B3HEPV("../b3hepv");
-    int snode = 1;
-    int dnode = 8;
-    int nsolutions = 0;
-    // int nsolutions = B3HEPV::boaPathRetrieval(snode, dnode);
-    cout << "The number of solution between: " << snode << " and "<< dnode << " is "<< nsolutions <<endl;
+    for (const auto& entry1 : hepv.boundaryEncodedPathView) {
+        int key1 = entry1.first;
+        for (const auto& entry2 : entry1.second) {
+            int key2 = entry2.first;
+            const vector<BoundaryPath>& paths = entry2.second;
+
+            cout << "snode: " << key1 << ",dnode : " << key2 << endl;
+            for (const auto& path : paths) {
+                path.printPath();
+            }
+        }
+    }
+}
+
+void test_concatBoundaryPath(){
+    // tested
+    BoundaryPath path1({1, 2, 3, 4}, {10, 20, 30, 40, 50});
+    BoundaryPath path2({5, 6, 7, 8}, {50, 60, 70, 80});
+    BoundaryPath path3({5, 6, 7, 8}, {80, 90, 100});
+
+    try {
+        BoundaryPath concatenatedPath = path1.concatPaths(path2).concatPaths(path3);
+        cout << "Concatenated Lubs: ";
+        for (int i : concatenatedPath.lub) {
+            cout << i << " ";
+        }
+        cout << endl;
+        concatenatedPath.printPath();
+    } catch (const runtime_error& error) {
+        cout << "Error: " << error.what() << endl;
+    }
+}
+
+void test_readFragmentEncodedPathView(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    for (const auto& entry : hepv.fragmentEncodedPathView) {
+        int key1 = entry.first;
+
+        for (const auto& innerEntry : entry.second) {
+            int key2 = innerEntry.first;
+            const BoundaryPath& boundaryPath = innerEntry.second;
+
+            boundaryPath.printPath();
+        }
+    }
+}
+
+void test_onePairBoundaryPathOf(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    vector<BoundaryPath> boundaryPathSet = hepv.onePairBoundaryPathOf(1, 3, 4, 5);
+    for (const auto& path : boundaryPathSet) {
+        for (int i : path.lub) {
+            cout << i << " ";
+        }
+        cout << endl;
+        path.printPath();
+    }
 }
 
 int main() {
     // Run the test functions
+
     // test_readFragementIndex();
     // test_readBoundaryNode();
-    test_boundaryPathDominanceCheck();
+    // test_boundaryPathDominanceCheck();
+    // test_ReadBoundaryPathView();
+    // test_concatBoundaryPath();
+    // test_readFragmentEncodedPathView();
+    test_onePairBoundaryPathOf();
     // testHbor();
+    
     return 0;
 }
