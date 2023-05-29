@@ -27,14 +27,12 @@ vector< vector<int> > fileToVector(const string& filename) {
     // load fin and store data into vector
     while(fin >> s_node >> d_node >> cost1 >> cost2 >> cost3 >> cost4){
         vector<int> line_info;
-
         line_info.push_back(s_node);
         line_info.push_back(d_node);
         line_info.push_back(cost1);
         line_info.push_back(cost2);
         line_info.push_back(cost3);
         line_info.push_back(cost4);
-
         map_info.push_back(line_info);
     }
 
@@ -316,8 +314,8 @@ void save_all_path(vector<vector<int>> allpath, string filetype) {
 
 int main() {
     clock_t start = clock();
-    vector< vector<int> > mapData = fileToVector("test2/adjacent_LUBs.txt");
-    vector< vector<int> > existingLUBs = fileToVector("test2/existingLUB.txt");
+    vector< vector<int> > mapData = fileToVector("../b3hepv/adjacent_LUBs.txt");
+    vector< vector<int> > existingLUBs = fileToVector("../b3hepv/existingLUB.txt");
 
     vector<vector<int>> allpath = allPairs(mapData, existingLUBs);
 

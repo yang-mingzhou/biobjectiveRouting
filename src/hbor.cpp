@@ -45,7 +45,35 @@ bool BoundaryPath::isPreceeding(const BoundaryPath& other) const {
     return false;
 }
 
-BoundaryPath BoundaryPath::concatPaths(const BoundaryPath& other) const {
+int BoundaryPath::startNode() const {
+    if (!path.empty()) {
+        return path.front();
+    } else {
+        // Handle the case where the path is empty
+        return -1;
+    }
+}
+
+int BoundaryPath::endNode() const {
+    if (!path.empty()) {
+        return path.back();
+    } else {
+        // Handle the case where the path is empty
+        return -1;
+    }
+}
+
+int BoundaryPath::getNode(int i) const {
+    if (i >= 0 && i < path.size()) {
+        return path[i];
+    } else {
+        // Handle the case where the index is out of range
+        return -1;
+    }
+}
+
+
+BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
         if (isPreceeding(other)) {
             vector<int> newLub(4);
             vector<int> newPath;
@@ -167,6 +195,8 @@ B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
         }
     }
     fragementFile.close();
+
+    // read adjacentLub.json {snode:node:[lb1, lb2, ub1, ub2]}
 }
 
 
@@ -190,7 +220,7 @@ vector<BoundaryPath> B3HEPV::onePairBoundaryPathOf(int snode, int dnode, int sBN
     }
     vector<BoundaryPath> interPathSetBetweenSbnAndDbn = boundaryEncodedPathView.at(sBN).at(dBN);
     for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
-        onePairPath = headPath.concatPaths(interPath).concatPaths(tailPath);
+        onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
         onePairBoundaryPathSet.push_back(onePairPath);
     }
     return onePairBoundaryPathSet;
@@ -239,42 +269,59 @@ vector<BoundaryPath> B3HEPV::paretoBoundaryPathBetween(int snode, int dnode){
         }
     }
     paretoBoundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
+    if (sfragment==dfragment){
+        paretoBoundaryPathSet.push_back(BoundaryPath({0,0,0,0}, {snode, dnode}));
+    }
     return paretoBoundaryPathSet;
 }
 
-vector<array<int, 2>> B3HEPV::expandPathCostOf(BoundaryPath boundaryPath){
-    vector<array<int, 2>> pathCostSet;
-    return pathCostSet;
-}
-
-vector<array<int, 2>> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
-    vector<array<int, 2>> pathCostSet;
-    return pathCostSet;
-}
-
-
-
-vector<array<int, 2>> B3HEPV::expandPathForBoundaryPathSet(vector<BoundaryPath> boundaryPathSet){
-    vector<array<int, 2>> expendedPathCostSet;
-    for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
-        vector<array<int, 2>> pathCostWithOneBoundaryPath = expandPathCostOf(boundaryPathSet[i]);
-        expendedPathCostSet.insert(expendedPathCostSet.end(), pathCostWithOneBoundaryPath.begin(), pathCostWithOneBoundaryPath.end());
+vector<Solution> B3HEPV::expandPathCostOf(BoundaryPath boundaryPath){
+    vector<Solution> pathCostSet;
+    for (int i =0, i<boundaryPath.len()-1, i++){
+        int currentNode = boundaryPath.getNode(i);
+        int currentFragment = fragmentIndex[currentNode-1][0];
+        int nextNode =  boundaryPath.getNode(i+1);
+        int nextFragment = fragmentIndex[nextNode-1][0];
+        if (currentFragment == nextFragment){
+            pathCostSet = B3HEPV::combineCostSet(pathCostSet, pathRetrievalWithInFragment(currentNode, nextNode, currentFragment));
+        }
+        else{
+            int c1 = adjacentLub.at(currentNode).at(nextNode)[0];
+            int c2 = adjacentLub.at(currentNode).at(nextNode)[1];
+            vector<Solution> betweenFragmentEdge = {Solution(c1, c2)};
+            pathCostSet = B3HEPV::combineCostSet(pathCostSet, betweenFragmentEdge);
+        }
     }
-    return expendedPathCostSet;
-}   
-
-vector<array<int, 2>> B3HEPV::dominanceCheck(vector<array<int, 2>> superParetoCostSet){
-    vector<array<int, 2>> paretoPathCostSet;
-    return paretoPathCostSet;
+    return pathCostSet;
 }
 
 
-int B3HEPV::hbor(int snode, int dnode){
-    vector<BoundaryPath> boundaryPathSet = paretoBoundaryPathBetween(snode, dnode);
-    vector<array<int, 2>> superParetoCostSet = expandPathForBoundaryPathSet(boundaryPathSet);
-    vector<array<int, 2>> solutions = dominanceCheck(superParetoCostSet); 
-    int nsolutions = solutions.size();
-    return nsolutions;
+vector<Solution> B3HEPV::combineCostSet(vector<Solution> costSet1, vector<Solution> costSet2) {
+    vector<Solution> result;
+    for (const Solution& solution1 : costSet1) {
+        for (const Solution& solution2 : costSet2) {
+            Solution combinedSolution = solution1.concatWith(solution2);
+            result.push_back(combinedSolution);
+        }
+    }
+    return result;
+}
+
+
+vector<Solution> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
+    vector<Solution> pathCostSet;
+    string filename = fileFolderName+ "/fragments/fragment" + std::to_string(fragmentId) + ".txt";
+    const char* charFilename = filename.c_str();
+    unsigned (*solutions)[2] = paretoPathsInFragment(snode, dnode, charFilename);
+    for (int i = 0; i < MAX_SOLUTIONS; i++) {
+        if (solutions[i][0] > 0) {
+            Solution currentSol(solutions[i][0], solutions[i][1]);
+            pathCostSet.push_back(currentSol);
+        } else {
+            break;
+        }
+    }   
+    return pathCostSet;
 }
 
 int B3HEPV::boaPathRetrieval(int snode, int dnode, const string& filename) {
@@ -289,6 +336,50 @@ int B3HEPV::boaPathRetrieval(int snode, int dnode, const string& filename) {
     }
     return nsolutions;
 }
+
+vector<Solution> B3HEPV::expandPathForBoundaryPathSet(vector<BoundaryPath> boundaryPathSet){
+    vector<Solution> expendedPathCostSet;
+    for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
+        vector<Solution> pathCostWithOneBoundaryPath = expandPathCostOf(boundaryPathSet[i]);
+        expendedPathCostSet.insert(expendedPathCostSet.end(), pathCostWithOneBoundaryPath.begin(), pathCostWithOneBoundaryPath.end());
+    }
+    return expendedPathCostSet;
+}   
+
+vector<Solution> B3HEPV::dominanceCheck(vector<Solution> superParetoCostSet){
+    vector<Solution> nonDominatedSolutions;
+    Solution currentSol, comparedSol;
+    vector<int> paretoIndex(superParetoCostSet.size(), 1);
+    for (size_t i = 0; i < superParetoCostSet.size(); ++i) {
+        if (paretoIndex[i]==1){
+            currentSol = superParetoCostSet[i];
+            for (size_t j = i+1; j < superParetoCostSet.size(); ++j){
+                comparedSol = superParetoCostSet[j];
+                if (currentSol.isDominatedBy(comparedSol)){
+                    paretoIndex[i]=0;
+                }
+                if (comparedSol.isDominatedBy(currentSol)){
+                    paretoIndex[j]=0;
+                }
+            }   
+            if (paretoIndex[i]==1){
+            nonDominatedSolutions.push_back(currentSol);
+            }
+        }
+    }
+    return nonDominatedSolutions;
+}
+
+
+int B3HEPV::hbor(int snode, int dnode){
+    vector<BoundaryPath> boundaryPathSet = paretoBoundaryPathBetween(snode, dnode);
+    vector<Solution> superParetoCostSet = expandPathForBoundaryPathSet(boundaryPathSet);
+    vector<Solution> solutions = dominanceCheck(superParetoCostSet); 
+    int nsolutions = solutions.size();
+    return nsolutions;
+}
+
+
 
 
 // int main(){

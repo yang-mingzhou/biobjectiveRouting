@@ -94,7 +94,7 @@ void test_concatBoundaryPath(){
     BoundaryPath path3({5, 6, 7, 8}, {80, 90, 100});
 
     try {
-        BoundaryPath concatenatedPath = path1.concatPaths(path2).concatPaths(path3);
+        BoundaryPath concatenatedPath = path1.concatWith(path2).concatWith(path3);
         cout << "Concatenated Lubs: ";
         for (int i : concatenatedPath.lub) {
             cout << i << " ";
@@ -134,6 +134,18 @@ void test_onePairBoundaryPathOf(){
     }
 }
 
+void test_paretoBoundaryPathBetween(){
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    vector<BoundaryPath> boundaryPathSet = hepv.paretoBoundaryPathBetween(1, 8);
+    for (const auto& path : boundaryPathSet) {
+        for (int i : path.lub) {
+            cout << i << " ";
+        }
+        cout << endl;
+        path.printPath();
+    }
+}
+
 int main() {
     // Run the test functions
 
@@ -143,7 +155,9 @@ int main() {
     // test_ReadBoundaryPathView();
     // test_concatBoundaryPath();
     // test_readFragmentEncodedPathView();
-    test_onePairBoundaryPathOf();
+    //test_onePairBoundaryPathOf();
+
+    test_paretoBoundaryPathBetween(); // remained untested
     // testHbor();
     
     return 0;
