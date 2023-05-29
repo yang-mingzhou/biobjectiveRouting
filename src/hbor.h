@@ -11,7 +11,7 @@ class BoundaryPath {
         : lub(lub_values), path(path_values) {
         // Ensure the lubs vector has exactly 4 elements
         if (lub_values.size() != 4) {
-            throw runtime_error("Invalid number of lubs values. Expected 4 elements.");
+            throw std::runtime_error("Invalid number of lubs values. Expected 4 elements.");
         }
     }
 
@@ -55,14 +55,14 @@ class B3HEPV {
     // for each boundaryPath, the lub: four elements are (LB1, LB2, UB1, UB2); path: a sequence of boundary nodes
     public:
     std::string fileFolderName;
-    std::vector<array<int, 2>> fragmentIndex;
+    std::vector<std::array<int, 2>> fragmentIndex;// For each node: [Fragment ID, the corresponding nodeID in the Fragment]
     std::vector<std::vector<int>> boundaryNodeSet;
     std::unordered_map<int, std::unordered_map<int, std::vector<BoundaryPath>>> boundaryEncodedPathView;
     std::unordered_map<int, std::unordered_map<int, BoundaryPath>> fragmentEncodedPathView;
     std::unordered_map<int, std::unordered_map<int, std::vector<int>>> adjacentLub;
     // Other member variables and functions...
 
-    B3HEPV(const string& folderName);
+    B3HEPV(const std::string& folderName);
     
     std::vector<BoundaryPath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN);
     std::vector<BoundaryPath> boundaryPathDominanceCheck(std::vector<BoundaryPath> boundaryPathSet);
@@ -71,6 +71,7 @@ class B3HEPV {
     std::vector<Solution> pathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
     std::vector<Solution> expandPathForBoundaryPathSet(std::vector<BoundaryPath> boundaryPathSet);
     std::vector<Solution> dominanceCheck(std::vector<Solution> superParetoCostSet);
+    std::vector<Solution> combineCostSet(std::vector<Solution> costSet1, std::vector<Solution> costSet2);
     int hbor(int snode, int dnode);
     int boaPathRetrieval(int snode, int dnode, const std::string& filename);
 };

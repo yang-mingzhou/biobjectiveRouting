@@ -9,7 +9,6 @@ extern unsigned num_gnodes;
 extern unsigned adjacent_table[MAXNODES][MAXNEIGH];
 extern unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 extern unsigned goal, start; 
-
 unsigned (*call_boastar())[2];
 
 #endif

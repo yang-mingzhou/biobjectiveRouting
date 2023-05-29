@@ -35,6 +35,19 @@ void initialize_parameters() {
     start_state = &graph_node[start];
     goal_state = &graph_node[goal];
     stat_percolations = 0;
+    for (int i = 0; i < num_gnodes; ++i){
+        graph_node[i].gmin = LARGE;
+    }
+    for (int i = 0; i < num_gnodes; ++i){
+        graph_node[i].gmin = LARGE;
+    }
+    int i, j;
+    for (i = 0; i < nsolutions; i++) {
+        for (j = 0; j < 2; j++) {
+            solutions[i][j]=0;
+        }
+    }
+    minf_solution = LARGE;
 }
 
 int backward_dijkstra(int dim) {
@@ -77,6 +90,8 @@ int boastar() {
     int next_recycled = 0;
     nsolutions = 0;
     stat_pruned = 0;
+    stat_generated = 0;
+    stat_created = 0;
 
     emptyheap();
 
@@ -91,9 +106,13 @@ int boastar() {
 
     stat_expansions = 0;
 
+    
+
     while (topheap() != NULL) {
         snode* n = popheap(); //best node in open
+
         short d;
+
 
         if (n->g2 >= graph_node[n->state].gmin || n->g2 + graph_node[n->state].h2 >= minf_solution) {
             stat_pruned++;
@@ -162,6 +181,7 @@ int boastar() {
     return nsolutions > 0;
 }
 
+
 /* ------------------------------------------------------------------------------*/
 unsigned (*call_boastar())[2]{
     float runtime;
@@ -170,12 +190,14 @@ unsigned (*call_boastar())[2]{
     unsigned long long min_time;
 
     initialize_parameters();
+    
 
     gettimeofday(&tstart, NULL);
 
     //Dijkstra h1
     if (backward_dijkstra(1))
         min_cost = start_state->h1;
+    
     //Dijkstra h2
     if (backward_dijkstra(2))
         min_time = start_state->h2;

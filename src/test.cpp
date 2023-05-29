@@ -146,6 +146,91 @@ void test_paretoBoundaryPathBetween(){
     }
 }
 
+void test_combineCostSet(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    std::vector<Solution> costSet1;
+    costSet1.push_back(Solution(1, 2));
+    costSet1.push_back(Solution(3, 4));
+
+    std::vector<Solution> costSet2;
+    costSet2.push_back(Solution(5, 6));
+    costSet2.push_back(Solution(7, 8));
+
+    // Combine the sets
+    std::vector<Solution> combinedSet = hepv.combineCostSet(costSet1, costSet2);
+
+    // Print the combined solutions
+    for (const Solution& solution : combinedSet) {
+        std::cout << "Combined Solution: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+
+}
+
+void test_dominanceCheck(){
+    // tested
+    // Create a vector of Solution objects
+    std::vector<Solution> superParetoCostSet;
+    superParetoCostSet.push_back(Solution(1, 2));
+    superParetoCostSet.push_back(Solution(3, 4));
+    superParetoCostSet.push_back(Solution(2, 1));
+    superParetoCostSet.push_back(Solution(4, 5));
+    superParetoCostSet.push_back(Solution(3, 6));
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    // Perform dominance check
+    std::vector<Solution> nonDominatedSolutions = hepv.dominanceCheck(superParetoCostSet);
+
+    // Print the non-dominated solutions
+    for (const Solution& solution : nonDominatedSolutions) {
+        std::cout << "Non-Dominated Solution: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+}
+
+void test_pathRetrievalWithInFragment(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    vector<Solution> pathCostSet2 = hepv.pathRetrievalWithInFragment(1, 4, 0);
+    cout<< "size: "<<pathCostSet2.size() << endl;
+    for (const Solution& solution : pathCostSet2) {
+        std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+    vector<Solution> pathCostSet = hepv.pathRetrievalWithInFragment(6, 8, 2);
+    cout<< "size: "<<pathCostSet.size() << endl;
+    for (const Solution& solution : pathCostSet) {
+        std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+    
+}
+
+void test_expandPathCostOf(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    BoundaryPath bp = BoundaryPath({10, 10, 15, 15},{1, 4, 6, 8});
+    vector<Solution> pathCostSet = hepv.pathRetrievalWithInFragment(6, 8, 2);
+    hepv.adjacentLub[4][6] = {5,6,5,6};
+    vector<Solution> solutions = hepv.expandPathCostOf(bp);
+    for (const Solution& solution : solutions) {
+        std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+}
+
+void test_expandPathForBoundaryPathSet(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv");
+    vector<BoundaryPath> bpSet;
+    BoundaryPath bp = BoundaryPath({10, 10, 15, 15},{1, 4, 6, 8});
+    BoundaryPath bp2 = BoundaryPath({10, 10, 15, 15},{1, 3, 5, 7, 8});
+    bpSet.push_back(bp);
+    bpSet.push_back(bp2);
+    hepv.adjacentLub[4][6] = {5,6,5,6};
+    hepv.adjacentLub[1][3] = {7,8,7,8};
+    hepv.adjacentLub[5][7] = {9,7,9,7};
+    vector<Solution> solutions = hepv.expandPathForBoundaryPathSet(bpSet);
+    for (const Solution& solution : solutions) {
+        std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+    }
+}
+
 int main() {
     // Run the test functions
 
@@ -155,9 +240,15 @@ int main() {
     // test_ReadBoundaryPathView();
     // test_concatBoundaryPath();
     // test_readFragmentEncodedPathView();
-    //test_onePairBoundaryPathOf();
+    // test_onePairBoundaryPathOf();
+    // test_dominanceCheck();
+    // test_combineCostSet();
+    // test_pathRetrievalWithInFragment();
+    // test_expandPathCostOf();
+    // test_expandPathForBoundaryPathSet();
 
-    test_paretoBoundaryPathBetween(); // remained untested
+    // remained untested
+    // test_paretoBoundaryPathBetween(); 
     // testHbor();
     
     return 0;
