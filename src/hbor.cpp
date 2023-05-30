@@ -95,7 +95,7 @@ BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
 
 B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
     // read fragment index
-    string fragmentIndexFilename =  folderName + "/fragmentIndex.txt";
+    string fragmentIndexFilename =  folderName + "/fragments/fragmentIndex.txt";
     ifstream fin(fragmentIndexFilename);
     int fragmentID, nodeID;
     // For each node: [Fragment ID, the corresponding nodeID in the Fragment]
@@ -170,7 +170,7 @@ B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
     }
 
     // read fragment encoded path view
-    string fragmentEncodedPathFileName =  folderName + "/encodedFragmentPathView.json";
+    string fragmentEncodedPathFileName =  folderName + "/fragments/fragmentEncodedPathView.json";
     fstream fragementFile(fragmentEncodedPathFileName);
 
     json jsonFragmentData;
@@ -203,8 +203,6 @@ B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
 vector<BoundaryPath> B3HEPV::onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN){
     vector<BoundaryPath> onePairBoundaryPathSet;
     BoundaryPath headPath,tailPath, onePairPath;
-
-
     if (snode == sBN){
         headPath = BoundaryPath({0, 0, 0, 0}, {snode});
     }

@@ -1,4 +1,3 @@
-obj/*.o
 boa
 bod
 namoadr
@@ -11,3 +10,4 @@ dfs_100_pair/output/*.error
 *.sbatch
 output
 src/*.o
+b3hepv/

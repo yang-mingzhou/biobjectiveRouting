@@ -3,13 +3,15 @@
 #include <list>
 #include <array>
 #include <iostream>  
-
+#include <chrono> // Include the chrono library
+#include "dfs_class.h"
 #include "hbor.h"
-
+#include "biobjectiveGraph.h"
 using namespace std;
 
 // module load gcc/11.3.0
-// gcc -std=c99 -o test.o test.cpp hbor.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
+// gcc -std=c99 -o test.o test.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
+// ./test.o
 
 void test_readFragementIndex() {
     // tested
@@ -231,6 +233,206 @@ void test_expandPathForBoundaryPathSet(){
     }
 }
 
+
+
+// void test_boudnaryDFS(){
+//     string adjacentLub = "../b3hepv/adjacent_LUBs.txt";
+//     string existingLub = "../b3hepv/existingLUB.txt";
+//     Bi_objective_DFS bodfs(adjacentLub, existingLub);
+//     bodfs.allPairs();
+//     bodfs.save_all_path("json");
+// }
+
+void test_biobjectiveGraph(){
+    //tested
+    BiobjectiveGraph graph(5);  // Create a graph with 5 vertices
+
+    // Add edges to the graph
+    graph.addEdge(0, 1, 3, 5);
+    graph.addEdge(0, 2, 2, 6);
+    graph.addEdge(1, 2, 1, 2);
+    graph.addEdge(1, 3, 4, 1);
+    graph.addEdge(2, 3, 2, 4);
+    graph.addEdge(2, 4, 1, 3);
+    graph.addEdge(3, 4, 2, 2);
+
+    int source = 0;
+    int costComponent = 1;  // Specify the cost component (0 or 1)
+
+    std::pair<std::vector<int>, std::vector<int>> result = graph.oneToAllDijkstra(source, costComponent);
+
+    // Display the minimum value of the specified cost component and the corresponding value of the other cost component
+    for (int i = 0; i < result.first.size(); i++) {
+        std::cout << "Vertex " << i << ": Cost" << costComponent << " = " << result.first[i] << ", Other Cost = " << result.second[i] << std::endl;
+    }
+}
+
+
+void test_biobjectiveGraphFromFile(){
+    // tested
+    //BiobjectiveGraph graph("../Maps/COL-road-d.txt"); 
+    BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    std::cout<<"number of vertices: "<< graph.numVertices <<std::endl;
+    int source = 0;
+    int costComponent = 0;  // Specify the cost component (0 or 1)
+    std::pair<std::vector<int>, std::vector<int>> result = graph.oneToAllDijkstra(source, costComponent);
+    // Display the minimum value of the specified cost component and the corresponding value of the other cost component
+    for (int i = 0; i < result.first.size(); i++) {
+        std::cout << "Vertex " << i << ": Cost" << costComponent << " = " << result.first[i] << ", Other Cost = " << result.second[i] << std::endl;
+    }
+    std::cout<<"finished"<<std::endl;
+}
+
+void test_biobjectiveGraphDijkstra(){
+    // tested
+    auto startTime = std::chrono::high_resolution_clock::now();
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt"); 
+    std::cout<<"number of vertices: "<< graph.numVertices <<std::endl;
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    // Print the elapsed time
+    std::cout << "Elapsed time: " << duration.count() << " milliseconds" << std::endl;
+    int source = 0;
+    int costComponent = 0;  // Specify the cost component (0 or 1)
+    
+    startTime = std::chrono::high_resolution_clock::now();
+    std::pair<std::vector<int>, std::vector<int>> result = graph.oneToAllDijkstra(source, costComponent);
+    endTime = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    // Print the elapsed time
+    std::cout << "Elapsed time: " << duration.count() << " milliseconds" << std::endl;
+}
+
+void test_readPartition(){
+    // tested
+    // BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
+
+        // Print the partition information
+//         std::cout << "Partition Information:" << std::endl;
+//         for (int vertex = 0; vertex < graph.numVertices; ++vertex) {
+//             std::cout << "Vertex " << vertex << ": Partition " << graph.partitions[vertex] << std::endl;
+//         }
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_saveFragments(){
+    // tested
+    BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    // BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/test/kaffpaIndex.txt");
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        std::string outputFolderName = "../b3hepv/test/fragments";
+        graph.saveFragments(outputFolderName);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_saveFragmentsLarge(){
+    // tested
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        std::string outputFolderName = "../b3hepv/col/fragments";
+        graph.saveFragments(outputFolderName);
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_findBoundaryNodes(){
+    // tested
+    BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/test/kaffpaIndex.txt");
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Find the boundary nodes
+        std::unordered_set<int> boundaryNodes = graph.findBoundaryNodes();
+
+        // Print the boundary nodes
+        std::cout << "Boundary Nodes: ";
+        for (int node : boundaryNodes) {
+            std::cout << node << " ";
+        }
+        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_findBoundaryNodesLarge(){
+    // tested
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Find the boundary nodes
+        std::unordered_set<int> boundaryNodes = graph.findBoundaryNodes();
+
+        // Print the boundary nodes
+        std::cout << "Boundary Nodes: ";
+        int i = 0;
+        for (int node : boundaryNodes) {
+            i+=1;
+        }
+        std::cout <<"No. BoundaryNodes: "<<i<< std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_fragmentEncodedPathView(){
+    // tested
+    BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/test/kaffpaIndex.txt");
+        graph.updateBoundaryNodes();
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Print the boundary nodes
+        std::cout << "Boundary Nodes: ";
+        for (int node : graph.boundaryNodes) {
+            std::cout << node << " ";
+        }
+        std::string outputFolderName = "../b3hepv/test/fragments";
+        graph.saveFragments(outputFolderName);
+        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+
+void test_fragmentEncodedPathViewLarge(){
+    // 
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
+        graph.updateBoundaryNodes();
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        std::string outputFolderName = "../b3hepv/col/fragments";
+        graph.saveFragments(outputFolderName);
+        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+
 int main() {
     // Run the test functions
 
@@ -246,7 +448,16 @@ int main() {
     // test_pathRetrievalWithInFragment();
     // test_expandPathCostOf();
     // test_expandPathForBoundaryPathSet();
-
+    // test_biobjectiveGraph();
+    // test_biobjectiveGraphFromFile();
+    // test_biobjectiveGraphDijkstra();
+    // test_readPartition();
+    // test_saveFragments();
+    // test_saveFragmentsLarge();
+    // test_findBoundaryNodes();
+    // test_findBoundaryNodesLarge();
+    test_fragmentEncodedPathView();
+    // test_fragmentEncodedPathViewLarge();
     // remained untested
     // test_paretoBoundaryPathBetween(); 
     // testHbor();
