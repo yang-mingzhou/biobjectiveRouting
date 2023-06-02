@@ -20,20 +20,24 @@ class Bi_objective_DFS{
     int s2d_existing_cost3, s2d_existing_cost4;
 
     vector<int> key_nodes;
+    string folderpath;
 
     // initialization
-    Bi_objective_DFS(const string& adj_node_filename, const string& ex_lubs_filename) {
-        vector< vector<int> > mapData = fileToVector(adj_node_filename);
-        vector< vector<int> > existings = fileToVector(ex_lubs_filename);
+    Bi_objective_DFS(const string& foldername) {
+
+        folderpath = foldername;
+        vector< vector<int> > mapData = fileToVector(folderpath + "/adjacent_LUBs.txt");
+        vector< vector<int> > existings = fileToVector(folderpath + "/existingLUB.txt");
     
         adjNodes = createAdjNodes(mapData);
         existingLUBs = createAdjNodes(existings);
-
 
         for (auto const &pair: adjNodes) {
             key_nodes.push_back(pair.first);
         }
         sort(key_nodes.begin(), key_nodes.end());
+
+
     }
 
     /*
@@ -49,20 +53,26 @@ class Bi_objective_DFS{
         vector<vector<int>> map_info;
         int s_node, d_node, cost1, cost2, cost3, cost4;
 
-        // load fin and store data into vector
-        while(fin >> s_node >> d_node >> cost1 >> cost2 >> cost3 >> cost4){
-            vector<int> line_info;
+        if (fin.is_open()) {
+            // load fin and store data into vector
+            while(fin >> s_node >> d_node >> cost1 >> cost2 >> cost3 >> cost4){
+                vector<int> line_info;
 
-            line_info.push_back(s_node);
-            line_info.push_back(d_node);
-            line_info.push_back(cost1);
-            line_info.push_back(cost2);
-            line_info.push_back(cost3);
-            line_info.push_back(cost4);
+                line_info.push_back(s_node);
+                line_info.push_back(d_node);
+                line_info.push_back(cost1);
+                line_info.push_back(cost2);
+                line_info.push_back(cost3);
+                line_info.push_back(cost4);
 
-            map_info.push_back(line_info);
+                map_info.push_back(line_info);
+            }
+            fin.close();
+        } else {
+            cout << "Unable to open the file." << endl;
+            abort();
         }
-        fin.close();
+
         return map_info;
     }
 
@@ -196,6 +206,7 @@ class Bi_objective_DFS{
         }
     }
 
+
     /*
     Input:
     The format of the map is a 2-d vector. The first dimension is the edges of the map, and the second dimension is the s_node, d_node, cost1 to cost4.
@@ -253,10 +264,11 @@ class Bi_objective_DFS{
     function: save the result of DFS to the file with specified filetype 
     */
     void save_all_path(string filetype) {
-        if (filetype=="txt"){
+        if (filetype=="txt") {
+
             ofstream myfile;
-            myfile.open("all_path.txt");
-            for (int i=0; i<allpath.size(); i++){
+            myfile.open(folderpath + "boundaryEncodedPathView.txt");
+            for (int i=0; i<allpath.size(); i++) {
                 for (int j=0; j<allpath[i].size(); j++) {
                     myfile << (allpath)[i][j] << " ";
                 }
@@ -290,10 +302,34 @@ class Bi_objective_DFS{
                 }
             }
 
-            ofstream jsonfile("all_path.json");
+            // ATTENTION: key in the json file would be all stirngs
+            ofstream jsonfile(folderpath + "/boundaryEncodedPathView.json");
             jsonfile << s_node_key.dump(4);
             jsonfile.close();
         
         }
+    }
+
+    void convert_map_of_map_to_json_file() {
+
+        json s_node_key;
+        for (auto it = adjNodes.begin(); it != adjNodes.end(); ++it) {
+
+            unordered_map<int, vector<int>> cur_node_adj = adjNodes[it->first];
+            json d_node_key;
+            string s_node = to_string(it->first);
+
+            for (auto it2 = cur_node_adj.begin(); it2 != cur_node_adj.end(); ++it2) {
+                string d_node = to_string(it2->first);
+                d_node_key[d_node].push_back(it2->second);
+            }
+
+            s_node_key[s_node] = d_node_key;
+        }
+
+        // ATTENTION: key in the json file would be all stirngs
+        ofstream jsonfile(folderpath + "/adjacent_LUB.json");
+        jsonfile << s_node_key.dump(4);
+        jsonfile.close();
     }
 };

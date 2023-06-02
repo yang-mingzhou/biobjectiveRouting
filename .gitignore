@@ -11,3 +11,4 @@ dfs_100_pair/output/*.error
 output
 src/*.o
 b3hepv/
+*.ipynb_checkpoints/

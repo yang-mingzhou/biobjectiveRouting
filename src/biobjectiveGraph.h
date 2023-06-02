@@ -51,6 +51,7 @@ public:
     std::pair<std::vector<int>, std::vector<int>> oneToAllDijkstra(int source, int costComponent) const;
     
     void saveFragments(const std::string& outputFolderName) const;
+    void saveExistingLUB(const std::string& inputFolderName) const;
 };
 
 
