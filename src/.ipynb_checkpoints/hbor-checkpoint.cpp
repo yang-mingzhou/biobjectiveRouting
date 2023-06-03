@@ -8,10 +8,9 @@
 #include <time.h>
 #include <algorithm>
 #include <string>
-#include "pathRetrieval.h"
 #include "hbor.h"
 #include "json.hpp"
-
+#include "biobjectiveGraph.h"
 using namespace std;
 using json = nlohmann::json;
 
@@ -20,10 +19,29 @@ using json = nlohmann::json;
 // module load gcc/11.3.0
 // gcc -std=c99 -o main.o hbor.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
 
+
+
+void printEdgeVectorsCPP(const struct GraphData* graphData) {
+    int num_arcs = graphData->numOfArcs;
+
+    std::cout << "Edge Vectors:" << std::endl;
+    for (int i = 0; i < num_arcs; i++) {
+        int ori = graphData->edgeVectors[i][0];
+        int dest = graphData->edgeVectors[i][1];
+        int dist = graphData->edgeVectors[i][2];
+        int t = graphData->edgeVectors[i][3];
+        std::cout << ori << " " << dest << " " << dist << " " << t << std::endl;
+    }
+}
+
 bool BoundaryPath::isDominatedBy(const BoundaryPath& other) const {
     // Compare the elements of lub
-    if (lub[0] >= other.lub[2] && lub[1] >= other.lub[3]) {
-        if (!(lub[0] == other.lub[2] && lub[1] == other.lub[3])) {
+    if (eq(other)) {
+        return true;
+    }
+
+    if ((lub[0] >= other.lub[0] && lub[1] >= other.lub[3])|| (lub[0] >= other.lub[2] && lub[1] >= other.lub[1])) {
+        if (!(lub[0] == other.lub[2] && lub[1] == other.lub[3]) || (lub[0] != lub[2])|| (lub[1] != lub[3])|| (other.lub[0] != other.lub[2])|| (other.lub[1] != other.lub[3]) ) {
             return true;
         }
     }
@@ -89,14 +107,19 @@ BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
 
             return BoundaryPath(newLub, newPath);
         }
-
         throw runtime_error("Cannot concatenate paths. The paths are not preceeding each other.");
     }
 
-B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
+
+B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar) {
+    cout<< "reading" <<endl;
     // read fragment index
-    string fragmentIndexFilename =  folderName + "/fragments/fragmentIndex.txt";
+    fileFolderName = "../b3hepv/"+mapName;
+    string fragmentIndexFilename =  fileFolderName + "/fragmentIndex.txt";
     ifstream fin(fragmentIndexFilename);
+    if (!fin.is_open()) {
+        throw std::runtime_error("Failed to open file: " + fragmentIndexFilename);
+    }
     int fragmentID, nodeID;
     // For each node: [Fragment ID, the corresponding nodeID in the Fragment]
     array<int, 2> nodeIndex;
@@ -109,24 +132,32 @@ B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
     fin.close();
 
     // read boundary nodes
-    string boundaryNodeFileName =  folderName + "/boundaryNodes.txt";
+    string boundaryNodeFileName =  fileFolderName + "/boundaryNodes.txt";
     ifstream inputFile(boundaryNodeFileName);
+    if (!inputFile.is_open()) {
+        throw std::runtime_error("Failed to open file: " + boundaryNodeFileName);
+    }
     string line;
     while (getline(inputFile, line)) {
         vector<int> row;
         stringstream ss(line);
         int nodeID;
         while (ss >> nodeID) {
-            row.push_back(nodeID);
+                row.push_back(nodeID);
+            
         }
+        // cout<<"row size"<< row.size() <<endl;
         boundaryNodeSet.push_back(row);
     }
     inputFile.close();
 
     // read boundary encoded path view
     // {snode: {dnoded:[[lb1,lb2,ub1,ub2,path1],[lb1',lb2',ub1',ub2',path2], ...]}}
-    string boundaryEncodedPathFileName =  folderName + "/boundaryEncodedPathView.json";
+    string boundaryEncodedPathFileName =  fileFolderName + "/boundaryEncodedPathView.json";
     ifstream file(boundaryEncodedPathFileName);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file: " + boundaryEncodedPathFileName);
+    }
     string jsonString((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
     file.close();
     // Parse the JSON string
@@ -168,61 +199,127 @@ B3HEPV::B3HEPV(const std::string& folderName) : fileFolderName(folderName) {
             }
         }
     }
-
+    //revise to ".txt" file
     // read fragment encoded path view
-    string fragmentEncodedPathFileName =  folderName + "/fragments/fragmentEncodedPathView.json";
-    fstream fragementFile(fragmentEncodedPathFileName);
+    string fragmentEncodedPathFileName =  fileFolderName + "/fragmentEncodedPathView.txt";
+    std::ifstream fragementFile(fragmentEncodedPathFileName);
+    if (!fragementFile.is_open()) {
+        throw std::runtime_error("Failed to open file: " + fragmentEncodedPathFileName);
+    }
+    std::string lineInfragment;
+    while (std::getline(fragementFile, lineInfragment)) {
+        std::istringstream iss(lineInfragment);
+        int startNode, endNode, cost1, cost2, cost3, cost4;
+        if (iss >> startNode >> endNode >> cost1 >> cost2 >> cost3 >> cost4) {
 
-    json jsonFragmentData;
-    fragementFile >> jsonFragmentData;
-
-    for (const auto& entry : jsonFragmentData.items()) {
-        int key1 = stoi(entry.key());
-
-        for (const auto& innerEntry : entry.value().items()) {
-            int key2 = stoi(innerEntry.key());
-
-            const json& lubsJson = innerEntry.value();
-            if (!lubsJson.is_array() || lubsJson.size() != 4) {
-                throw runtime_error("Invalid lubs format. Expected an array of 4 elements.");
-            }
-
-            vector<int> lubs = lubsJson.get<vector<int>>();
-
-            BoundaryPath boundaryPath(lubs, {key1, key2});
-
-            fragmentEncodedPathView[key1][key2] = boundaryPath;
-        }
+            BoundaryPath path;
+            path.path = {startNode, endNode};
+            path.lub = {cost1, cost2, cost3, cost4};
+            fragmentEncodedPathView[startNode][endNode] = path;
+        } 
     }
     fragementFile.close();
 
     // read adjacentLub.json {snode:node:[lb1, lb2, ub1, ub2]}
+    string adjacentFilename =  fileFolderName + "/adjacent_LUB.json";
+    ifstream adjfile(adjacentFilename);
+    
+
+    if (!adjfile.is_open()) {
+        std::cout << "Failed to open JSON file." << std::endl;
+    }
+
+    // Read the JSON content from the file
+    nlohmann::json jsonDataAdj;
+    adjfile >> jsonDataAdj;
+    
+    
+    for (auto it = jsonDataAdj.begin(); it != jsonDataAdj.end(); ++it) {
+        int key1 = std::stoi(it.key());
+
+        for (auto innerIt = it.value().begin(); innerIt != it.value().end(); ++innerIt) {
+            int key2 = std::stoi(innerIt.key());
+            const std::vector<int>& values = innerIt.value()[0];
+
+            adjacentLub[key1][key2] = values;
+        }
+    }
+
+    
+    read_adjacent_table();
+    cout<< "fragments read: " << graphDataVector.size()<<endl;
+
 }
 
 
-vector<BoundaryPath> B3HEPV::onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN){
+vector<BoundaryPath> B3HEPV::onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN) {
+    // cout << snode << dnode<<sBN << dBN<<endl;
     vector<BoundaryPath> onePairBoundaryPathSet;
-    BoundaryPath headPath,tailPath, onePairPath;
-    if (snode == sBN){
+    BoundaryPath headPath, tailPath, onePairPath;
+
+    if (snode == sBN) {
         headPath = BoundaryPath({0, 0, 0, 0}, {snode});
-    }
-    else {
-        headPath = fragmentEncodedPathView.at(snode).at(sBN);
+    } else {
+        if (fragmentEncodedPathView.count(snode) > 0 && fragmentEncodedPathView.at(snode).count(sBN) > 0) {
+            headPath = fragmentEncodedPathView.at(snode).at(sBN);
+        } else if (fragmentEncodedPathView.count(sBN) > 0 && fragmentEncodedPathView.at(sBN).count(snode) > 0) {
+            headPath = fragmentEncodedPathView.at(sBN).at(snode).reverse();
+        } else {
+            throw std::runtime_error("Missing entry in fragmentEncodedPathView");
+        }
     }
 
-    if (dnode == dBN){
+    if (dnode == dBN) {
         tailPath = BoundaryPath({0, 0, 0, 0}, {dnode});
+    } else {
+        if (fragmentEncodedPathView.count(dBN) > 0 && fragmentEncodedPathView.at(dBN).count(dnode) > 0) {
+            tailPath = fragmentEncodedPathView.at(dBN).at(dnode);
+        } else if (fragmentEncodedPathView.count(dnode) > 0 && fragmentEncodedPathView.at(dnode).count(dBN) > 0) {
+            tailPath = fragmentEncodedPathView.at(dnode).at(dBN).reverse();
+        } else {
+            throw std::runtime_error("Missing entry in fragmentEncodedPathView");
+        }
     }
-    else {
-        tailPath = fragmentEncodedPathView.at(dBN).at(dnode);
-    }
-    vector<BoundaryPath> interPathSetBetweenSbnAndDbn = boundaryEncodedPathView.at(sBN).at(dBN);
-    for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
-        onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
+    
+    if (sBN == dBN){
+        onePairPath = headPath.concatWith(tailPath);
         onePairBoundaryPathSet.push_back(onePairPath);
+
     }
+    else if (boundaryEncodedPathView.count(sBN) > 0 && boundaryEncodedPathView.at(sBN).count(dBN) > 0) {
+        const vector<BoundaryPath>& interPathSetBetweenSbnAndDbn = boundaryEncodedPathView.at(sBN).at(dBN);
+        for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
+            onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
+            onePairBoundaryPathSet.push_back(onePairPath);
+        }
+    }
+    else if (boundaryEncodedPathView.count(dBN) > 0 && boundaryEncodedPathView.at(dBN).count(sBN) > 0){
+        const vector<BoundaryPath>& interPathSetBetweenSbnAndDbn = reversePaths(boundaryEncodedPathView.at(dBN).at(sBN));
+        for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
+            onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
+            onePairBoundaryPathSet.push_back(onePairPath);
+        }
+    }
+    // cout<<onePairBoundaryPathSet.size()<<endl;
     return onePairBoundaryPathSet;
 }
+
+
+
+
+
+std::vector<BoundaryPath> B3HEPV::reversePaths(const std::vector<BoundaryPath>& paths) {
+    std::vector<BoundaryPath> reversed_paths;
+    reversed_paths.reserve(paths.size()); // Reserve memory for efficiency
+
+    for (const BoundaryPath& path : paths) {
+        BoundaryPath reversed_path = path.reverse();
+        reversed_paths.push_back(reversed_path);
+    }
+
+    return reversed_paths;
+}
+
 
 vector<BoundaryPath> B3HEPV::boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
     // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
@@ -237,7 +334,7 @@ vector<BoundaryPath> B3HEPV::boundaryPathDominanceCheck(vector<BoundaryPath> bou
                 if (currentPath.isDominatedBy(comparedPath)){
                     paretoIndex[i]=0;
                 }
-                if (comparedPath.isDominatedBy(currentPath)){
+                else if (comparedPath.isDominatedBy(currentPath)){
                     paretoIndex[j]=0;
                 }
             }   
@@ -255,21 +352,29 @@ vector<BoundaryPath> B3HEPV::paretoBoundaryPathBetween(int snode, int dnode){
     int sBN, dBN;
     int sfragment = fragmentIndex[snode-1][0];
     int dfragment = fragmentIndex[dnode-1][0];
+    
+    // cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
+   
     vector<int> sBoundaryNode = boundaryNodeSet[sfragment];
     vector<int> dBoundaryNode = boundaryNodeSet[dfragment];
-    
     for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
         sBN = sBoundaryNode[i];
-        for (size_t j = 0; j < sBoundaryNode.size(); ++j){
+        for (size_t j = 0; j < dBoundaryNode.size(); ++j){
             dBN = dBoundaryNode[j];
+            // cout<< "snode: " << snode << " ,dnode "<< dnode << " ,sBN "<< sBN << " ,dBN "<< dBN  <<endl;
             vector<BoundaryPath> onePairBoundaryPathSet = onePairBoundaryPathOf(snode, dnode, sBN, dBN); 
             boundaryPathSet.insert(boundaryPathSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
         }
     }
-    paretoBoundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
     if (sfragment==dfragment){
-        paretoBoundaryPathSet.push_back(BoundaryPath({0,0,0,0}, {snode, dnode}));
+        vector<Solution> infragmentCostSet = pathRetrievalWithInFragment(snode, dnode, sfragment);
+        for (const Solution& solution : infragmentCostSet){
+            boundaryPathSet.push_back(BoundaryPath({solution.cost1,solution.cost2,solution.cost1,solution.cost2}, {snode, dnode}));
+        }
+        
     }
+    paretoBoundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
+    
     return paretoBoundaryPathSet;
 }
 
@@ -312,30 +417,45 @@ vector<Solution> B3HEPV::combineCostSet(vector<Solution> costSet1, vector<Soluti
 
 
 vector<Solution> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
+//     cout<<"snode"<< snode<< " "<< dnode<< " "<<fragmentId <<endl;
     vector<Solution> pathCostSet;
-    string filename = fileFolderName+ "/fragments/fragment" + std::to_string(fragmentId) + ".txt";
-    const char* charFilename = filename.c_str();
+//     string filename = fileFolderName+ "/fragments/fragment" + std::to_string(fragmentId) + ".txt";
+//     const char* charFilename = filename.c_str();
     int snodeInFragment = fragmentIndex[snode-1][1];
     int dnodeInFragment = fragmentIndex[dnode-1][1];
-    unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, charFilename);
+    GraphData currentGraph = graphDataVector[fragmentId+1];
+//     cout<< "get current graph" << currentGraph.numOfGnode << " , "<< currentGraph.numOfArcs << endl;
+    const GraphData* graphDataPtr = &currentGraph;
+//     cout<< "get current graph pointer" << endl;
+    // cout<<"snode In fragment"<< snodeInFragment<< " "<< dnodeInFragment<< " "<<fragmentId <<endl;
+//     printEdgeVectorsCPP(graphDataPtr);
+    unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
+
+    
     int i = 0;
     while (solutions[i][0] > 0) {
         Solution currentSol(solutions[i][0], solutions[i][1]);
         pathCostSet.push_back(currentSol);
         i++;
-    }  
+    } 
+//     cleanupGraphData(&currentGraph);
     return pathCostSet;
 }
 
 
-int B3HEPV::boaPathRetrieval(int snode, int dnode, const string& filename) {
+int B3HEPV::boaPathRetrieval(int snode, int dnode) {
     // convert filename to char *
     int nsolutions = 0;
-    const char* charFilename = filename.c_str();
-    unsigned (*solutions)[2] = paretoPathsInFragment(snode, dnode, charFilename);
+    GraphData currentGraph = graphDataVector[0];
+//     const char* charFilename = filename.c_str();
+    const GraphData* graphDataPtr = &currentGraph;
+    
+    unsigned (*solutions)[2] = paretoPathsInFragment(snode, dnode, graphDataPtr);
     // Access and print the values
+//     cleanupGraphData(&currentGraph);
     int i = 0;
     while (solutions[i][0] > 0) {
+//         cout<< solutions[i][0] << ", " << solutions[i][1] << endl;
         nsolutions+=1;
         i++;
     }   
@@ -378,13 +498,136 @@ vector<Solution> B3HEPV::dominanceCheck(vector<Solution> superParetoCostSet){
 
 int B3HEPV::hbor(int snode, int dnode){
     vector<BoundaryPath> boundaryPathSet = B3HEPV::paretoBoundaryPathBetween(snode, dnode);
+//     for (const auto& path : boundaryPathSet) {
+//         for (int i : path.lub) {
+//             cout << i << " ";
+//         }
+//         cout << endl;
+//         path.printPath();
+//     }
     vector<Solution> superParetoCostSet = B3HEPV::expandPathForBoundaryPathSet(boundaryPathSet);
     vector<Solution> solutions = B3HEPV::dominanceCheck(superParetoCostSet); 
+//     for (const Solution& solution : solutions) {
+//         std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+//     }
     int nsolutions = solutions.size();
     return nsolutions;
 }
 
 
+void B3HEPV::read_adjacent_table() {
+    string filenameEntirGraph = "../Maps/"+ mapName + "-road-d.txt";
+    
+    GraphData graphData;
+    int num_nodes = 0;
+    int num_arcs = 0;
+
+    // Initialize graphData
+    initializeGraphData(&graphData, num_nodes, num_arcs);
+
+    // Read data from file and assign it to graphData
+    readDataFromFile(&graphData, filenameEntirGraph);
+
+    graphDataVector.push_back(graphData);
+
+    // Cleanup graphData
+//     cleanupGraphData(&graphData);
+    
+   
+    for (int i =1; i<nPartitions+1; i++ ){
+        string filenameSubGraph = fileFolderName+"/fragments/fragment"+std::to_string(i-1)+".txt";
+        // initializeGraphData(&graphData, num_nodes, num_arcs);
+        // Read data from file and assign it to graphData
+        readDataFromFile(&graphData, filenameSubGraph);
+        graphDataVector.push_back(graphData);
+        // cleanupGraphData(&graphData);
+    }
+}
+
+
+void B3HEPV::readDataFromFile(GraphData* graphData, const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    // Read num_nodes and num_arcs
+    file >> graphData->numOfGnode >> graphData->numOfArcs;
+
+    // Allocate memory for edgeVectors
+    graphData->edgeVectors = new int*[graphData->numOfArcs];
+    for (int i = 0; i < graphData->numOfArcs; i++) {
+        graphData->edgeVectors[i] = new int[4];
+    }
+
+    // Read data into edgeVectors
+    for (int i = 0; i < graphData->numOfArcs; i++) {
+        for (int j = 0; j < 4; j++) {
+            file >> graphData->edgeVectors[i][j];
+        }
+    }
+//     printEdgeVectorsCPP(graphData);
+    
+
+    file.close();
+}
+
+
+
+int B3HEPV::boaPathRetrievalFromFile(int snode, int dnode, const string& filename) {
+    // convert filename to char *
+    int nsolutions = 0;
+    const char* charFilename = filename.c_str();
+    unsigned (*solutions)[2] = paretoPathsInFragmentChar(snode, dnode, charFilename);
+    // Access and print the values
+    int i = 0;
+    while (solutions[i][0] > 0) {
+        cout<< "c1: "<< solutions[i][0] << ", c2: "<< solutions[i][1] << endl;
+        nsolutions+=1;
+        i++;
+    }   
+    return nsolutions;
+}
+
+
+
+
+
+void precomputation(const string & mapName){
+    // tested
+    BiobjectiveGraph graph("../Maps/"+mapName+"-road-d.txt");
+    try {
+        std::string outputFolderName = "../b3hepv/"+mapName;
+        auto startTime = std::chrono::high_resolution_clock::now();
+        // Read the partition information from a file
+        graph.readPartition(outputFolderName+"/kaffpaIndex.txt");
+        graph.updateBoundaryNodes();
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Print the boundary nodes
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of read partition: " << duration.count() << " milliseconds" << std::endl;
+        
+
+        startTime = std::chrono::high_resolution_clock::now();
+        graph.saveFragments(outputFolderName);
+        endTime = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of fragments saving: " << duration.count() << " milliseconds" << std::endl;
+        
+        startTime = std::chrono::high_resolution_clock::now();
+        graph.saveExistingLUB(outputFolderName);
+        endTime = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of existing LUBS: " << duration.count() << " milliseconds" << std::endl;
+                
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    
+
+}
 
 
 // int main(){

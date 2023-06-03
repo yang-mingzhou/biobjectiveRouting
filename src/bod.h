@@ -10,6 +10,11 @@ extern unsigned adjacent_table[MAXNODES][MAXNEIGH];
 extern unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 extern unsigned goal, start; 
 
-void call_bod();
+typedef struct {
+    unsigned number_of_solution;
+    unsigned solution_vector[MAX_SOLUTIONS][2];
+} Solutions;
+
+Solutions* call_bod();
 
 #endif

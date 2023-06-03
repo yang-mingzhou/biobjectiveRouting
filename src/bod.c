@@ -25,9 +25,11 @@ unsigned long long int stat_expansions = 0;
 unsigned long long int stat_generated = 0;
 unsigned long long int minf_solution = LARGE;
 
-unsigned solutions[MAX_SOLUTIONS][2];
-unsigned nsolutions = 0;
+// unsigned solutions[MAX_SOLUTIONS][2];
+
 unsigned stat_pruned = 0;
+
+
 
 void initialize_parameters() {
     start_state = &graph_node[start];
@@ -42,7 +44,7 @@ snode* new_node() {
     return state;
 }
 
-int bod() {
+int bod(Solutions* solutions) {
     snode* recycled_nodes[MAX_RECYCLE];
     int next_recycled = 0;
     nsolutions = 0;
@@ -73,6 +75,12 @@ int bod() {
         }
 
         graph_node[n->state].gmin = n->g2;
+        
+        
+        solutions[n->state].solution_vector[n->state]][0]= n->g1;
+        solutions[n->state].solution_vector[n->state]][1]= n->g2;
+        solutions[n->state].number_of_solution = solutions[n->state].number_of_solutio+1;
+        
 
         ++stat_expansions;
 
@@ -112,12 +120,12 @@ int bod() {
 }
 
 /* ------------------------------------------------------------------------------*/
-void call_bod() {
+Solutions* call_bod() {
     float runtime;
     struct timeval tstart, tend;
 
     initialize_parameters();
-
+    Solutions* solutions = malloc(num_gnodes * sizeof(Solutions));
     gettimeofday(&tstart, NULL);
 
     //BOD
@@ -131,4 +139,5 @@ void call_bod() {
         runtime * 1000,
         stat_generated,
         stat_expansions);
+    return solutions;
 }

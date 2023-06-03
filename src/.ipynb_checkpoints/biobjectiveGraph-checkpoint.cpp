@@ -1,5 +1,8 @@
 #include "biobjectiveGraph.h"
 #include <string>
+#include <sstream>
+
+using json = nlohmann::json;
 
 BiobjectiveGraph::BiobjectiveGraph(const std::string& filename) {
     std::ifstream file(filename);
@@ -98,6 +101,7 @@ void BiobjectiveGraph::readPartition(const std::string& partitionFile) {
 
 
 std::unordered_set<int> BiobjectiveGraph::findBoundaryNodes() const {
+    // 0 based
     std::unordered_set<int> boundaryNodes;
 
     for (int startVertex = 0; startVertex < numVertices; ++startVertex) {
@@ -123,14 +127,64 @@ void BiobjectiveGraph::addVertex() {
 
 
 void BiobjectiveGraph::saveFragments(const std::string& outputFolderName) const {
+    // Create a JSON object
+    json root;
+    std::string boundaryNodePartitionFilename = outputFolderName + "/boundaryNodePartition.json";
+    // Convert the boundary nodes and psartitions to JSON
+    for (int node : boundaryNodes) {
+        int partition = partitions[node];
+
+        // Convert the node and partition to strings
+        std::stringstream ssNode;
+        ssNode << node+1;
+        std::string strNode = ssNode.str();
+
+        // Add the node and partition to the JSON object
+        root[strNode] = partition;
+    }
+
+    // Open the file for writing
+    std::ofstream bnpfile(boundaryNodePartitionFilename);
+
+    if (bnpfile.is_open()) {
+        // Write the JSON object to the file
+        bnpfile << root.dump(4);  // Add pretty-printing with indentation level 4
+        bnpfile.close();
+        std::cout << "Boundary nodes saved to " << boundaryNodePartitionFilename << std::endl;
+    } else {
+        std::cerr << "Failed to open file: " << boundaryNodePartitionFilename << std::endl;
+    }
+    
+    
+    
 
     // Create a mapping of vertex ID to vertex ID in fragment
     std::unordered_map<int, int> vertexIDInFragment;
+    
+    
+    std::vector<std::unordered_set<int>> fragmentBoundaryNodes(partitionCount);
 
+    // Iterate over the boundary nodes and assign them to their corresponding fragment
+    for (int boundaryNode : boundaryNodes) {
+        fragmentBoundaryNodes[partitions[boundaryNode]].insert(boundaryNode);
+    }
+    std::string boundaryFilename = outputFolderName + "/boundaryNodes.txt";
+    std::ofstream boundaryFile(boundaryFilename); 
+    
+    
     // Save each fragment as a separate file
     for (int fragment = 0; fragment < partitionCount; ++fragment) {
-        std::string filename = outputFolderName + "/fragment" + std::to_string(fragment) + ".txt";
+        std::string filename = outputFolderName + "/fragments/fragment" + std::to_string(fragment) + ".txt";
         std::ofstream outputFile(filename);
+        
+        
+        const auto& fragBoundaryNodeSet = fragmentBoundaryNodes[fragment];
+        for (int boundaryNode : fragBoundaryNodeSet) {
+            boundaryFile << boundaryNode+1 << " ";  // Save the original node ID
+        }
+        boundaryFile << std::endl;
+
+        
 
         // Count the number of vertices and edges in the fragment
         int numFragmentVertices = 0;
@@ -188,6 +242,9 @@ void BiobjectiveGraph::saveFragments(const std::string& outputFolderName) const 
     
     std::string boundaryDijkstraFile = outputFolderName + "/fragmentEncodedPathView.txt";
     std::ofstream boundaryDijkstraOutput(boundaryDijkstraFile);
+    
+    std::string adjacentLUBs = outputFolderName + "/adjacent_LUBs.txt";
+    std::ofstream adjacentLUBsOutput(adjacentLUBs);
 
     for (int fragment = 0; fragment < partitionCount; ++fragment) {
         
@@ -216,17 +273,17 @@ void BiobjectiveGraph::saveFragments(const std::string& outputFolderName) const 
 
 
         // Find the boundary nodes within the fragment
-        std::vector<int> boundaryNodes;
+        std::vector<int> boundaryNodesVector;
         for (int vertex = 0; vertex < numVertices; ++vertex) {
             if (partitions[vertex] == fragment && isBoundaryNode(vertex)) {
-                boundaryNodes.push_back(vertex);
+                boundaryNodesVector.push_back(vertex);
             }
         }
         
         
         
         // Perform one-to-all Dijkstra for each boundary node and save the results
-        for (int boundaryNode : boundaryNodes) {
+        for (int boundaryNode : boundaryNodesVector) {
             int startVertexIDInFragment = vertexIDInFragment[boundaryNode]-1;
 
             std::pair<std::vector<int>, std::vector<int>> dijkstraResult1 = fragmentGraph.oneToAllDijkstra(startVertexIDInFragment, 0);
@@ -252,6 +309,19 @@ void BiobjectiveGraph::saveFragments(const std::string& outputFolderName) const 
                      // Write the results to the file
                     boundaryDijkstraOutput << boundaryNode+1 << " " << target+1 << " " << minCostComponent1 << " " << minCostComponent2 << " "
                                << minOtherCostComponent2 << " " << minOtherCostComponent1 << std::endl;
+                    if (isBoundaryNode(target) && target != boundaryNode){
+                        adjacentLUBsOutput << boundaryNode+1 << " " << target+1 << " " << minCostComponent1 << " " << minCostComponent2 << " "
+                               << minOtherCostComponent2 << " " << minOtherCostComponent1 << std::endl;
+                    }
+                    
+                }
+            }
+            for (const auto& edge : adjacencyList[boundaryNode]) {
+                int target = edge.end;
+                // Check if the endpoints belong to different fragments
+                if (partitions[boundaryNode] != partitions[target]) {
+                    adjacentLUBsOutput << boundaryNode+1 << " " << target+1 << " " << edge.cost1 << " " << edge.cost2 << " "
+                               << edge.cost1 << " " << edge.cost2 << std::endl;
                 }
             }
             
@@ -265,8 +335,39 @@ void BiobjectiveGraph::saveFragments(const std::string& outputFolderName) const 
 //     std::ofstream boundaryDijkstraOutput(boundaryDijkstraFile);
 //     boundaryDijkstraOutput << fragmentResults.dump(4); // Use pretty printing with indentation of 4 spaces
     boundaryDijkstraOutput.close();
+    adjacentLUBsOutput.close();
 }
 
+
+void BiobjectiveGraph::saveExistingLUB(const std::string& inputFolderName) const {
+    std::string filename = inputFolderName + "/existingLUB.txt";
+    std::ofstream outputFile(filename);
+    for (int boundaryNode : boundaryNodes) {
+
+        
+        std::pair<std::vector<int>, std::vector<int>> dijkstraResult1 = oneToAllDijkstra(boundaryNode, 0);
+        std::pair<std::vector<int>, std::vector<int>> dijkstraResult2 = oneToAllDijkstra(boundaryNode, 1);
+
+        // Store the results in the file
+        for (int target : boundaryNodes) {
+            if (target != boundaryNode) {
+                int minCostComponent1 = dijkstraResult1.first[target];
+                int minOtherCostComponent1 = dijkstraResult1.second[target];
+                int minCostComponent2 = dijkstraResult2.first[target];
+                int minOtherCostComponent2 = dijkstraResult2.second[target];
+
+                outputFile << boundaryNode +1<< " " << target+1 << " " << minCostComponent1 << " " << minCostComponent2
+                           << " " << minOtherCostComponent2 << " " << minOtherCostComponent1 << std::endl;
+            }
+            else if(target == boundaryNode){
+                outputFile << boundaryNode+1 << " " << target+1 << " " << 0 << " " << 0
+                           << " " << 0 << " " << 0 << std::endl;
+            }
+        }
+    }
+
+    outputFile.close();
+}
 
 
 

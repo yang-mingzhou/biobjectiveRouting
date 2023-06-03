@@ -1,6 +1,6 @@
-#include "pathRetrieval.h"
+#include "bodPathRetrieval.h"
 #include "include.h"
-#include "boastar.h"
+#include "bod.h"
 #include "graph.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 
-void initializeGraphData(struct GraphData* graphData, int num_nodes, int num_arcs) {
+void bod_initializeGraphData(struct GraphData* graphData, int num_nodes, int num_arcs) {
     graphData->numOfGnode = num_nodes;
     graphData->numOfArcs = num_arcs;
 
@@ -18,14 +18,14 @@ void initializeGraphData(struct GraphData* graphData, int num_nodes, int num_arc
     }
 }
 
-void cleanupGraphData(struct GraphData* graphData) {
+void bod_cleanupGraphData(struct GraphData* graphData) {
     for (int i = 0; i < graphData->numOfArcs; i++) {
         free(graphData->edgeVectors[i]);
     }
     free(graphData->edgeVectors);
 }
 
-void printEdgeVectors(const struct GraphData* graphData) {
+void bod_printEdgeVectors(const struct GraphData* graphData) {
     int num_arcs = graphData->numOfArcs;
 
     printf("Edge Vectors:\n");
@@ -40,7 +40,7 @@ void printEdgeVectors(const struct GraphData* graphData) {
 
 
 
-void assign_global_variables(const struct GraphData* graphData) {
+void bod_assign_global_variables(const struct GraphData* graphData) {
 //     printf("Number of Nodes inner: %d\n", graphData->numOfGnode);
 //     printf("Number of Arcs inner: %d\n", graphData->numOfArcs);
 //     printEdgeVectors(graphData);
@@ -73,31 +73,29 @@ void assign_global_variables(const struct GraphData* graphData) {
 //     printf("finished assignedc: %d\n", i);
 }
 
-unsigned (*paretoPathsInFragment(int s_node, int d_node, const struct GraphData* graphData))[2]{
+unsigned (*bod_paretoPathsInFragment(int s_node,  const struct GraphData* graphData))[2]{
 //     printf("Number of Nodes: %d\n", graphData->numOfGnode);
 //     printf("Number of Arcs: %d\n", graphData->numOfArcs);
 	start = s_node - 1;
-	goal = d_node - 1;
     num_gnodes = graphData->numOfGnode;
 //     const GraphData* graphDataPtr = &graphData;
 // 	read_adjacent_table(filename);
-	assign_global_variables(graphData);
+	bod_assign_global_variables(graphData);
 //     printf("Finished start: %d\n", start);
 //     printf("Finished end: %d\n", goal);
 //     printEdgeVectors(graphData);
     new_graph();
-	unsigned (*solutions)[2] = call_boastar();
-	return solutions;
+	Solutions* result = call_bod();
+	return result;
 }
 
 
-unsigned (*paretoPathsInFragmentChar(int s_node, int d_node, const char* filename))[2]{
-	start = s_node - 1;
-	goal = d_node - 1;
-	read_adjacent_table(filename);
+unsigned (*bod_paretoPathsInFragmentChar(int s_node, const char* filename))[2]{
+    start = s_node - 1;
+    read_adjacent_table(filename);
 	new_graph();
-	unsigned (*solutions)[2] = call_boastar();
-	return solutions;
+	Solutions* result = call_bod();
+	return result;
 }
 
 
