@@ -37,6 +37,7 @@ void initialize_parameters() {
     stat_percolations = 0;
     for (int i = 0; i < num_gnodes; ++i){
         graph_node[i].gmin = LARGE;
+        graph_node[i].heapindex = 0;
     }
     int i, j;
     for (i = 0; i < nsolutions; i++) {
@@ -75,11 +76,13 @@ int backward_dijkstra(int dim) {
 //         }
         
         for (d = 1; d < pred_adjacent_table[n->id][0] * 3; d += 3) {
-            
+//             printf("predNode node: %d\n", pred_adjacent_table[n->id][d]);
+//             printf("predNode node id: %d\n",graph_node[pred_adjacent_table[n->id][d]].id);
             pred = &graph_node[pred_adjacent_table[n->id][d]];
             int new_weight = n->key + pred_adjacent_table[n->id][d + dim];
             if (pred->key > new_weight) {
                 pred->key = new_weight;
+//                 printf("trying to insert predNode node whose heapindex is : %d\n", pred->heapindex);
                 insertheap_dij(pred);
             }
         }
@@ -242,13 +245,13 @@ unsigned (*call_boastar())[2] {
     gettimeofday(&tend, NULL);
     runtime = 1.0 * (tend.tv_sec - tstart.tv_sec) + 1.0 * (tend.tv_usec - tstart.tv_usec) / 1000000.0;
     //		printf("nsolutions:%d Runtime(ms):%f Generated: %llu statexpanded1:%llu\n", nsolutions, time_astar_first1*1000, stat_generated, stat_expansions);
-    printf("%lld;%lld;%d;%f;%llu;%llu;%llu\n",
-        start_state->id + 1,
-        goal_state->id + 1,
-        nsolutions,
-        runtime * 1000,
-        stat_generated,
-        stat_expansions,
-        stat_created);
+//     printf("%lld;%lld;%d;%f;%llu;%llu;%llu\n",
+//         start_state->id + 1,
+//         goal_state->id + 1,
+//         nsolutions,
+//         runtime * 1000,
+//         stat_generated,
+//         stat_expansions,
+//         stat_created);
     return solutions;
 }

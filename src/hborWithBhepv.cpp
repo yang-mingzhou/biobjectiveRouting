@@ -359,9 +359,9 @@ int HBORBasic::hbor(int snode, int dnode){
     }
 
     vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
-    for (size_t j = 0; j < paretoSet.size(); ++j){
-        cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;
-    }
+//     for (size_t j = 0; j < paretoSet.size(); ++j){
+//         cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;
+//     }
 
     return paretoSet.size();
     
@@ -370,9 +370,9 @@ int HBORBasic::hbor(int snode, int dnode){
 int HBORBasic::boa(int snode, int dnode){
     cout<< "snodednode" << snode << dnode <<endl;
     vector<BiobjectivePath> solutionSet = boaPathRetrievalWithInFragment(snode, dnode, -1);
-    for (size_t j = 0; j < solutionSet.size(); ++j){
-        cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
-    }
+//     for (size_t j = 0; j < solutionSet.size(); ++j){
+//         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
+//     }
 
     return solutionSet.size();
     
