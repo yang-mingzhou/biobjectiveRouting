@@ -39,16 +39,42 @@ void read_adjacent_table(const char* filename) {
 	fclose(f);
 }
 
+// void new_graph() {
+// 	int y;
+// 	if (graph_node == NULL) {
+//         printf("num_gnodes: %d\n", num_gnodes);
+// 		graph_node = (gnode*) calloc(num_gnodes, sizeof(gnode));
+// 		for (y = 0; y < num_gnodes; ++y) 		{
+// 			graph_node[y].id = y;
+// 			graph_node[y].gmin = LARGE;
+// 			graph_node[y].h1 = LARGE;
+// 			graph_node[y].h2 = LARGE;
+// 			graph_node[y].gopfirst = NULL;
+// 		}
+// 	}
+// }
+
 void new_graph() {
-	int y;
-	if (graph_node == NULL) {
-		graph_node = (gnode*) calloc(num_gnodes, sizeof(gnode));
-		for (y = 0; y < num_gnodes; ++y) 		{
-			graph_node[y].id = y;
-			graph_node[y].gmin = LARGE;
-			graph_node[y].h1 = LARGE;
-			graph_node[y].h2 = LARGE;
-			graph_node[y].gopfirst = NULL;
-		}
-	}
+    int y;
+//     printf("num_gnodes: %d\n", num_gnodes);
+    if (graph_node == NULL) {
+        graph_node = (gnode*) calloc(num_gnodes, sizeof(gnode));
+    } else {
+        gnode* temp = (gnode*) realloc(graph_node, num_gnodes * sizeof(gnode));
+        if (temp == NULL) {
+            // handle error, e.g., free resources, print error message, exit, etc.
+            printf("Failed to allocate memory!\n");
+            free(graph_node);
+            exit(1);
+        }
+        graph_node = temp;
+    }
+    for (y = 0; y < num_gnodes; ++y) {
+        graph_node[y].id = y;
+        graph_node[y].gmin = LARGE;
+        graph_node[y].h1 = LARGE;
+        graph_node[y].h2 = LARGE;
+        graph_node[y].gopfirst = NULL;
+    }
 }
+

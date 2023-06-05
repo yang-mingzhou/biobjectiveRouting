@@ -16,14 +16,15 @@
 #include <iomanip>
 #include "json.hpp"
 
-
+#ifndef EDGE
+#define EDGE
 struct Edge {
     int end;
     int cost1;
     int cost2;
     Edge(int _end, int _cost1, int _cost2) : end(_end), cost1(_cost1), cost2(_cost2) {}
 };
-
+#endif
 
 class BiobjectiveGraph {
 public:

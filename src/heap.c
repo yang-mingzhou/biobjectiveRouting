@@ -77,7 +77,6 @@ gnode* topheap_dij() {
 /* --------------------------------------------------------------- */
 void emptyheap_dij() {
   int i;
-
   for (i = 1; i <= heapsize_dij; ++i)
     heap_dij[i]->heapindex = 0;
   heapsize_dij = 0;

@@ -552,6 +552,10 @@ void test_precomputation(){
 void test_hbor(){
     B3HEPV hepv = B3HEPV("test",3);
     cout<< hepv.hbor(1,8) <<endl;
+    cout<< hepv.hbor(8,1) <<endl;
+    cout<< hepv.hbor(1,4) <<endl;
+    cout<< hepv.hbor(5,4) <<endl;
+    cout<< hepv.hbor(3,6) <<endl;
 }
 
 
@@ -561,6 +565,16 @@ void test_boa(){
     cout<< hepv.boaPathRetrievalFromFile(6,1, "../Maps/multigraph-road-d.txt") <<endl;
     cout<< hepv.boaPathRetrievalFromFile(3,2, "../Maps/multigraph-road-d.txt") <<endl;
     cout<< hepv.boaPathRetrievalFromFile(4,5, "../Maps/multigraph-road-d.txt") <<endl;
+}
+
+
+void test_boaFromFile(){
+    B3HEPV hepv = B3HEPV("test",3);
+    cout<< hepv.boaPathRetrievalFromFile(186399, 206453, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(106474, 399484, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(219775, 41597, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(240731, 182571, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(417012, 345347, "../Maps/COL-road-d.txt") <<endl;
 }
 
 int main() {
@@ -602,7 +616,8 @@ int main() {
     // remained untested
     // test_dfsLarge();
     
-    test_hbor();
+//     test_hbor();
+    test_boaFromFile();
     
     return 0;
 }

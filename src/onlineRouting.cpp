@@ -16,7 +16,7 @@ using namespace std;
 // Function to process each query and calculate the statistics
 void processQueries(const std::string& mapName, int nPar) {
     
-    int queryCount = -1;
+    int queryCount = 5;
     std::string queryFileName = "../Queries/" + mapName + "-queries";
     std::ifstream queryFile(queryFileName);
     if (!queryFile) {
@@ -24,12 +24,13 @@ void processQueries(const std::string& mapName, int nPar) {
         return;
     }
     
-    
     auto startTimeRead = std::chrono::high_resolution_clock::now();
     B3HEPV hepv = B3HEPV(mapName, nPar);
     auto endTimeRead = std::chrono::high_resolution_clock::now();
     auto durationRead = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeRead - startTimeRead);
     std::cout<<"Read B3HPV time:" << durationRead.count() << " milliseconds" << std::endl;
+
+  
     
     std::vector<double> hborQueryTimes; // To store the times for hbor method
     std::vector<double> boaQueryTimes; // To store the times for boaPathRetrieval method
@@ -37,6 +38,7 @@ void processQueries(const std::string& mapName, int nPar) {
     std::string line;
     int queryID = 0;
     while (std::getline(queryFile, line) && (queryCount <= 0 || queryID < queryCount)) {
+
         int startNode, endNode;
         std::istringstream iss(line);
         if (!(iss >> startNode >> endNode)) {
@@ -55,8 +57,8 @@ void processQueries(const std::string& mapName, int nPar) {
         
         // Perform the hbor query and measure the time
         auto startHbor = std::chrono::high_resolution_clock::now();
-        int hborNsolutions;
-        hborNsolutions = hepv.hbor(startNode, endNode); 
+        int hborNsolutions = 0;
+//         hborNsolutions = hepv.hbor(startNode, endNode); 
         auto endHbor = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> hborDuration = endHbor - startHbor;
         double hborQueryTime = hborDuration.count();
@@ -67,7 +69,11 @@ void processQueries(const std::string& mapName, int nPar) {
         std::cout << "Time used - HBOR: " << hborQueryTime << " seconds, BOA: " << boaQueryTime << " seconds." << std::endl;
         
         queryID++;
+        
+        hepv.cleanupGraphDataVector();
     }
+    
+    
     
     // Calculate statistics for HBOR method
     double hborTotalRuntime = 0.0;

@@ -423,15 +423,13 @@ vector<Solution> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int f
 //     const char* charFilename = filename.c_str();
     int snodeInFragment = fragmentIndex[snode-1][1];
     int dnodeInFragment = fragmentIndex[dnode-1][1];
-    GraphData currentGraph = graphDataVector[fragmentId+1];
+    const GraphData currentGraph = graphDataVector[fragmentId+1];
 //     cout<< "get current graph" << currentGraph.numOfGnode << " , "<< currentGraph.numOfArcs << endl;
     const GraphData* graphDataPtr = &currentGraph;
 //     cout<< "get current graph pointer" << endl;
     // cout<<"snode In fragment"<< snodeInFragment<< " "<< dnodeInFragment<< " "<<fragmentId <<endl;
 //     printEdgeVectorsCPP(graphDataPtr);
     unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
-
-    
     int i = 0;
     while (solutions[i][0] > 0) {
         Solution currentSol(solutions[i][0], solutions[i][1]);
@@ -446,7 +444,7 @@ vector<Solution> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int f
 int B3HEPV::boaPathRetrieval(int snode, int dnode) {
     // convert filename to char *
     int nsolutions = 0;
-    GraphData currentGraph = graphDataVector[0];
+    const GraphData currentGraph = graphDataVector[0];
 //     const char* charFilename = filename.c_str();
     const GraphData* graphDataPtr = &currentGraph;
     
@@ -511,6 +509,7 @@ int B3HEPV::hbor(int snode, int dnode){
 //         std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
 //     }
     int nsolutions = solutions.size();
+    solutions.clear();
     return nsolutions;
 }
 
@@ -535,12 +534,13 @@ void B3HEPV::read_adjacent_table() {
     
    
     for (int i =1; i<nPartitions+1; i++ ){
+        GraphData subGraphData;
         string filenameSubGraph = fileFolderName+"/fragments/fragment"+std::to_string(i-1)+".txt";
-        // initializeGraphData(&graphData, num_nodes, num_arcs);
+        initializeGraphData(&subGraphData, num_nodes, num_arcs);
         // Read data from file and assign it to graphData
-        readDataFromFile(&graphData, filenameSubGraph);
-        graphDataVector.push_back(graphData);
-        // cleanupGraphData(&graphData);
+        readDataFromFile(&subGraphData, filenameSubGraph);
+        graphDataVector.push_back(subGraphData);
+//         cleanupGraphData(&subGraphData);
     }
 }
 
@@ -574,6 +574,14 @@ void B3HEPV::readDataFromFile(GraphData* graphData, const std::string& filename)
 }
 
 
+void B3HEPV::cleanupGraphDataVector() {
+    for (auto& graphData : graphDataVector) {
+        cleanupGraphData(&graphData);
+    }
+    // Clear the vector
+    graphDataVector.clear();
+}
+
 
 int B3HEPV::boaPathRetrievalFromFile(int snode, int dnode, const string& filename) {
     // convert filename to char *
@@ -583,7 +591,7 @@ int B3HEPV::boaPathRetrievalFromFile(int snode, int dnode, const string& filenam
     // Access and print the values
     int i = 0;
     while (solutions[i][0] > 0) {
-        cout<< "c1: "<< solutions[i][0] << ", c2: "<< solutions[i][1] << endl;
+        // cout<< "c1: "<< solutions[i][0] << ", c2: "<< solutions[i][1] << endl;
         nsolutions+=1;
         i++;
     }   

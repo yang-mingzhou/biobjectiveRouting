@@ -4,15 +4,16 @@
 #include <array>
 #include <iostream>  
 #include <chrono> // Include the chrono library
-#include "dfs_class.h"
 #include "hbor.h"
 #include "biobjectiveGraph.h"
+#include "dfs_class_v2.h"
 using namespace std;
 
 // module load gcc/11.3.0
 // gcc -std=c99 -o test.o test.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
 // ./test.o
 
+#if 0
 void test_readFragementIndex() {
     // tested
     B3HEPV hepv = B3HEPV("../b3hepv");
@@ -42,7 +43,7 @@ void test_readBoundaryNode(){
 
 void test_boundaryPathDominanceCheck(){
     // tested
-    vector<int> lub1 = {10, 20, 30, 40};
+    vector<int> lub1 = {10, 20, 10, 20};
     vector<int> path1 = {5, 6, 7, 8};
     BoundaryPath bp1(lub1, path1);
     
@@ -50,12 +51,15 @@ void test_boundaryPathDominanceCheck(){
     vector<int> path2 = {5, 14, 15, 8};
     BoundaryPath bp2(lub2, path2);
 
-    vector<int> lub3 = {50, 60, 110, 120};
-    vector<int> path3 = {5, 40, 15, 8};
+    vector<int> lub3 = {10 , 20, 20, 30};
+    vector<int> path3 = {51, 410, 115, 18};
     BoundaryPath bp3(lub3, path3);
 
+    vector<int> lub4 = {30 , 40, 50, 70};
+    vector<int> path4 = {50, 400, 105, 80};
+    BoundaryPath bp4(lub4, path4);
 
-    vector<BoundaryPath> boundaryPathSet = {bp1, bp2, bp3};
+    vector<BoundaryPath> boundaryPathSet = {bp1, bp2, bp3, bp4};
 
     cout<< "before:" <<endl;
 
@@ -63,7 +67,7 @@ void test_boundaryPathDominanceCheck(){
         boundaryPath.printPath();
     }
 
-    B3HEPV hepv = B3HEPV("../b3hepv");
+    B3HEPV hepv = B3HEPV("../b3hepv/test");
 
     vector<BoundaryPath> paretoBoundaryPath = hepv.boundaryPathDominanceCheck(boundaryPathSet);
     cout<< "after:" <<endl;
@@ -110,17 +114,38 @@ void test_concatBoundaryPath(){
 
 void test_readFragmentEncodedPathView(){
     // tested
-    B3HEPV hepv = B3HEPV("../b3hepv");
+    std::cout<< "testing test_readFragmentEncodedPathView"<<std::endl;
+    B3HEPV hepv = B3HEPV("../b3hepv/test");
     for (const auto& entry : hepv.fragmentEncodedPathView) {
+        int key1 = entry.first;
+        for (const auto& innerEntry : entry.second) {
+            int key2 = innerEntry.first;
+            const BoundaryPath& boundaryPath = innerEntry.second;
+            boundaryPath.printPath();
+            for (const auto& cost : boundaryPath.lub) {
+                cout<<" "<<cost<<" ";
+            }
+        }
+    }
+    cout<<endl;
+}
+
+void test_readAdjacentLub(){
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv/test");
+    for (const auto& entry : hepv.adjacentLub) {
         int key1 = entry.first;
 
         for (const auto& innerEntry : entry.second) {
             int key2 = innerEntry.first;
-            const BoundaryPath& boundaryPath = innerEntry.second;
-
-            boundaryPath.printPath();
+            const std::vector<int> costs = innerEntry.second;
+            cout<<"snode "<<key1<<"dnode" << key2 <<endl;
+            for (const auto& cost : costs) {
+                cout<<" "<<cost<<" ";
+            }
         }
     }
+    cout <<endl;
 }
 
 void test_onePairBoundaryPathOf(){
@@ -137,8 +162,9 @@ void test_onePairBoundaryPathOf(){
 }
 
 void test_paretoBoundaryPathBetween(){
-    B3HEPV hepv = B3HEPV("../b3hepv");
-    vector<BoundaryPath> boundaryPathSet = hepv.paretoBoundaryPathBetween(1, 8);
+    // tested
+    B3HEPV hepv = B3HEPV("../b3hepv/test");
+    vector<BoundaryPath> boundaryPathSet = hepv.paretoBoundaryPathBetween(8, 1);
     for (const auto& path : boundaryPathSet) {
         for (int i : path.lub) {
             cout << i << " ";
@@ -204,6 +230,8 @@ void test_pathRetrievalWithInFragment(){
     
 }
 
+
+
 void test_expandPathCostOf(){
     // tested
     B3HEPV hepv = B3HEPV("../b3hepv");
@@ -232,6 +260,7 @@ void test_expandPathForBoundaryPathSet(){
         std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
     }
 }
+
 
 
 
@@ -407,7 +436,7 @@ void test_fragmentEncodedPathView(){
         for (int node : graph.boundaryNodes) {
             std::cout << node << " ";
         }
-        std::string outputFolderName = "../b3hepv/test/fragments";
+        std::string outputFolderName = "../b3hepv/test";
         graph.saveFragments(outputFolderName);
         std::cout << std::endl;
     } catch (const std::exception& e) {
@@ -417,14 +446,14 @@ void test_fragmentEncodedPathView(){
 
 
 void test_fragmentEncodedPathViewLarge(){
-    // 
+    // tested
     BiobjectiveGraph graph("../Maps/COL-road-d.txt");
     try {
         // Read the partition information from a file
         graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
         graph.updateBoundaryNodes();
         std::cout << "Partition Count " << graph.partitionCount << std::endl;
-        std::string outputFolderName = "../b3hepv/col/fragments";
+        std::string outputFolderName = "../b3hepv/col";
         graph.saveFragments(outputFolderName);
         std::cout << std::endl;
     } catch (const std::exception& e) {
@@ -433,7 +462,123 @@ void test_fragmentEncodedPathViewLarge(){
 }
 
 
+void test_existingLUB(){
+    // tested
+    BiobjectiveGraph graph("../Maps/testImputGraph.txt");
+    try {
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/test/kaffpaIndex.txt");
+        graph.updateBoundaryNodes();
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Print the boundary nodes
+        std::cout << "Boundary Nodes: ";
+        for (int node : graph.boundaryNodes) {
+            std::cout << node << " ";
+        }
+        std::string outputFolderName = "../b3hepv/test";
+        graph.saveFragments(outputFolderName);
+        graph.saveExistingLUB(outputFolderName);
+        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_existingLUBLarge(){
+    // tested
+    BiobjectiveGraph graph("../Maps/COL-road-d.txt");
+    try {
+        auto startTime = std::chrono::high_resolution_clock::now();
+        // Read the partition information from a file
+        graph.readPartition("../b3hepv/col/kaffpaIndex.txt");
+        graph.updateBoundaryNodes();
+        std::cout << "Partition Count " << graph.partitionCount << std::endl;
+        // Print the boundary nodes
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of read partition: " << duration.count() << " milliseconds" << std::endl;
+        
+        std::string outputFolderName = "../b3hepv/col";
+        
+        startTime = std::chrono::high_resolution_clock::now();
+        graph.saveFragments(outputFolderName);
+        endTime = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of fragments saving: " << duration.count() << " milliseconds" << std::endl;
+        
+        startTime = std::chrono::high_resolution_clock::now();
+        graph.saveExistingLUB(outputFolderName);
+        endTime = std::chrono::high_resolution_clock::now();
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        std::cout << "Elapsed time of existing LUBS: " << duration.count() << " milliseconds" << std::endl;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
+void test_dfs(){
+    // tested
+    std::string folderName = "../b3hepv/test";
+    Bi_objective_DFS bodfs(folderName);
+    bodfs.allPairs();
+    bodfs.save_all_path("json");
+    bodfs.convert_map_of_map_to_json_file();
+}
+
+void test_dfsLarge(){
+    // untested
+    auto startTime = std::chrono::high_resolution_clock::now();
+    std::string folderName = "../b3hepv/col";
+    Bi_objective_DFS bodfs(folderName);
+    bodfs.allPairs();
+    bodfs.save_all_path("json");
+    bodfs.convert_map_of_map_to_json_file();
+    // Print the boundary nodes
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+    std::cout << "Elapsed time of dfs: " << duration.count() << " milliseconds" << std::endl;
+}
+
+void test_precomputation(){
+    auto startTimeTotal = std::chrono::high_resolution_clock::now();
+    precomputation("test");
+    auto endTimeTotal = std::chrono::high_resolution_clock::now();
+    auto durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
+    std::cout << "Elapsed time of precomputation: " << durationTotal.count() << " milliseconds" << std::endl;
+}
+#endif
+
+void test_hbor(){
+    B3HEPV hepv = B3HEPV("test",3);
+    cout<< hepv.hbor(1,8) <<endl;
+    cout<< hepv.hbor(8,1) <<endl;
+    cout<< hepv.hbor(1,4) <<endl;
+    cout<< hepv.hbor(5,4) <<endl;
+    cout<< hepv.hbor(3,6) <<endl;
+}
+
+
+void test_boa(){
+    B3HEPV hepv = B3HEPV("test",3);
+    cout<< hepv.boaPathRetrievalFromFile(1,6, "../Maps/multigraph-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(6,1, "../Maps/multigraph-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(3,2, "../Maps/multigraph-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(4,5, "../Maps/multigraph-road-d.txt") <<endl;
+}
+
+
+void test_boaFromFile(){
+    B3HEPV hepv = B3HEPV("test",3);
+    cout<< hepv.boaPathRetrievalFromFile(186399, 206453, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(106474, 399484, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(219775, 41597, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(240731, 182571, "../Maps/COL-road-d.txt") <<endl;
+    cout<< hepv.boaPathRetrievalFromFile(417012, 345347, "../Maps/COL-road-d.txt") <<endl;
+}
+
 int main() {
+
     // Run the test functions
 
     // test_readFragementIndex();
@@ -456,11 +601,23 @@ int main() {
     // test_saveFragmentsLarge();
     // test_findBoundaryNodes();
     // test_findBoundaryNodesLarge();
-    test_fragmentEncodedPathView();
+    // test_fragmentEncodedPathView();
     // test_fragmentEncodedPathViewLarge();
-    // remained untested
+    // test_existingLUB();
+    // test_existingLUBLarge();
+    // test_dfs();
+    // test_precomputation();
+
+    // test_readFragmentEncodedPathView();
+    // test_readAdjacentLub();
+    
     // test_paretoBoundaryPathBetween(); 
-    // testHbor();
+//     test_boa();
+    // remained untested
+    // test_dfsLarge();
+    
+//     test_hbor();
+    test_boaFromFile();
     
     return 0;
 }

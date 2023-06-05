@@ -8,24 +8,24 @@
 #include <unistd.h>
 #include <string.h>
 
-void initializeGraphData(struct GraphData* graphData, int num_nodes, int num_arcs) {
-    graphData->numOfGnode = num_nodes;
-    graphData->numOfArcs = num_arcs;
+// void initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
+//     graphData->numOfGnode = num_nodes;
+//     graphData->numOfArcs = num_arcs;
 
-    graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
-    for (int i = 0; i < num_arcs; i++) {
-        graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
-    }
-}
+//     graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
+//     for (int i = 0; i < num_arcs; i++) {
+//         graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
+//     }
+// }
 
-void cleanupGraphData(struct GraphData* graphData) {
-    for (int i = 0; i < graphData->numOfArcs; i++) {
-        free(graphData->edgeVectors[i]);
-    }
-    free(graphData->edgeVectors);
-}
+// void cleanupGraphData(GraphData* graphData) {
+//     for (int i = 0; i < graphData->numOfArcs; i++) {
+//         free(graphData->edgeVectors[i]);
+//     }
+//     free(graphData->edgeVectors);
+// }
 
-void printEdgeVectors(const struct GraphData* graphData) {
+void printEdgeVectors(const GraphData* graphData) {
     int num_arcs = graphData->numOfArcs;
 
     printf("Edge Vectors:\n");
@@ -40,7 +40,7 @@ void printEdgeVectors(const struct GraphData* graphData) {
 
 
 
-void assign_global_variables(const struct GraphData* graphData) {
+void assign_global_variables(const GraphData* graphData) {
 //     printf("Number of Nodes inner: %d\n", graphData->numOfGnode);
 //     printf("Number of Arcs inner: %d\n", graphData->numOfArcs);
 //     printEdgeVectors(graphData);
@@ -48,8 +48,10 @@ void assign_global_variables(const struct GraphData* graphData) {
     num_gnodes = graphData->numOfGnode;
 	int num_arcs = graphData->numOfArcs;
 
-	for (i = 0; i < num_gnodes; i++)
-		adjacent_table[i][0] = 0;
+	for (i = 0; i < num_gnodes; i++){
+        adjacent_table[i][0] = 0;
+        pred_adjacent_table[i][0] = 0;
+    }
 
     
 	for (i = 0; i < num_arcs; i++) {
@@ -73,7 +75,8 @@ void assign_global_variables(const struct GraphData* graphData) {
 //     printf("finished assignedc: %d\n", i);
 }
 
-unsigned (*paretoPathsInFragment(int s_node, int d_node, const struct GraphData* graphData))[2]{
+unsigned (*paretoPathsInFragment(int s_node, int d_node, const GraphData* graphData))[2]{
+//     
 //     printf("Number of Nodes: %d\n", graphData->numOfGnode);
 //     printf("Number of Arcs: %d\n", graphData->numOfArcs);
 	start = s_node - 1;
@@ -91,14 +94,24 @@ unsigned (*paretoPathsInFragment(int s_node, int d_node, const struct GraphData*
 }
 
 
-unsigned (*paretoPathsInFragmentChar(int s_node, int d_node, const char* filename))[2]{
-	start = s_node - 1;
-	goal = d_node - 1;
-	read_adjacent_table(filename);
-	new_graph();
-	unsigned (*solutions)[2] = call_boastar();
-	return solutions;
+unsigned (*paretoPathsInFragmentChar(int s_node, int d_node, const char* filename))[2] {
+    start = s_node - 1;
+    goal = d_node - 1;
+    read_adjacent_table(filename);
+    if (graph_node == NULL) {
+        printf("New graph generated: %d\n", 1);
+        new_graph();
+    }
+    unsigned (*solutions)[2] = call_boastar();
+    if (graph_node == NULL) {
+        printf("Successfully cleared graph: %d\n", 1);
+    }
+    return solutions;
 }
+
+
+
+
 
 
 

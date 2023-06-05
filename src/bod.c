@@ -4,9 +4,8 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "heap.h"
-#include "node.h"
+#include "bod.h"
 #include "include.h"
-#include "boastar.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -35,6 +34,10 @@ void initialize_parameters() {
     start_state = &graph_node[start];
     goal_state = &graph_node[goal];
     stat_percolations = 0;
+    
+    for (int i = 0; i < num_gnodes; ++i){
+        graph_node[i].gmin = LARGE;
+    }
 }
 
 
@@ -44,10 +47,17 @@ snode* new_node() {
     return state;
 }
 
-int bod(Solutions* solutions) {
+void free_node(snode* node) {
+    if(node != NULL) { // always good to check if the pointer is not NULL
+        free(node);
+        node = NULL; // good practice to set freed pointer to NULL
+    }
+}
+
+int bod(BodSolutions* s_array) {
     snode* recycled_nodes[MAX_RECYCLE];
     int next_recycled = 0;
-    nsolutions = 0;
+    int nsolutions = 0;
     stat_pruned = 0;
 
     emptyheap();
@@ -61,6 +71,8 @@ int bod(Solutions* solutions) {
     insertheap(start_node);
 
     stat_expansions = 0;
+    
+//     printf("start node: %d\n", start_node->state);
 
     while (topheap() != NULL) {
         snode* n = popheap(); //best node in open
@@ -68,42 +80,58 @@ int bod(Solutions* solutions) {
 
         if (n->g2 >= graph_node[n->state].gmin) {
             stat_pruned++;
-            if (next_recycled < MAX_RECYCLE) {
-                recycled_nodes[next_recycled++] = n;
-            }
+//             if (next_recycled < MAX_RECYCLE) {
+//                 recycled_nodes[next_recycled++] = n;
+//             }
+            free_node(n);
             continue;
         }
 
         graph_node[n->state].gmin = n->g2;
         
+//         nsolutions = solutions[n->state].number_of_solution;
+//         solutions[n->state].solution_vector[nsolutions]][0]= n->g1;
+//         solutions[n->state].solution_vector[nsolutions]][1]= n->g2;
+//         solutions[n->state].number_of_solution = nsolutions+1;
         
-        solutions[n->state].solution_vector[n->state]][0]= n->g1;
-        solutions[n->state].solution_vector[n->state]][1]= n->g2;
-        solutions[n->state].number_of_solution = solutions[n->state].number_of_solutio+1;
+        SolutionNode* new_sol_node = malloc(sizeof(SolutionNode));
+        new_sol_node->solution[0] = n->g1;  // your solution values
+        new_sol_node->solution[1] = n->g2;
+        new_sol_node->next = s_array[n->state].head;
+        s_array[n->state].head = new_sol_node;
+        s_array[n->state].number_of_solution++;
         
-
+        
         ++stat_expansions;
 
-        for (d = 1; d < pred_adjacent_table[n->state][0] * 3; d += 3) {
+        for (d = 1; d < adjacent_table[n->state][0] * 3; d += 3) {
             snode* pred;
             double newkey;
-            unsigned nsucc = pred_adjacent_table[n->state][d];
-            unsigned cost1 = pred_adjacent_table[n->state][d + 1];
-            unsigned cost2 = pred_adjacent_table[n->state][d + 2];
+            unsigned nsucc = adjacent_table[n->state][d];
+            unsigned cost1 = adjacent_table[n->state][d + 1];
+            unsigned cost2 = adjacent_table[n->state][d + 2];
 
             unsigned newg1 = n->g1 + cost1;
             unsigned newg2 = n->g2 + cost2;
+            
+//             if (start == 0){
+//                 printf("Expand node: %d%d%d\n", nsucc, cost1, cost2);
+//                 printf("Cost before: %d%d\n", n->g1, n->g2);
+//                 printf("Cost after: %d%d\n", newg1, newg2);
+//             }
+
+            
 
             if (newg2 >= graph_node[nsucc].gmin)
                 continue;
  
-            if (next_recycled > 0) { //to reuse pruned nodes in memory
-                pred = recycled_nodes[--next_recycled];
-            }
-            else {
-                pred = new_node();
-            }
-
+//             if (next_recycled > 0) { //to reuse pruned nodes in memory
+//                 pred = recycled_nodes[--next_recycled];
+//             }
+//             else {
+//                 pred = new_node();
+//             }
+            pred = new_node();
             pred->state = nsucc;
             stat_generated++;
 
@@ -114,30 +142,44 @@ int bod(Solutions* solutions) {
             pred->key = newkey;
             insertheap(pred);
         }
+        if (next_recycled < MAX_RECYCLE) {
+            recycled_nodes[next_recycled++] = n;
+        }
+    }
+    int freeCnt;
+    for(freeCnt=0;freeCnt < next_recycled;++freeCnt ){
+        free_node(recycled_nodes[freeCnt]);
     }
 
     return 1;
 }
 
 /* ------------------------------------------------------------------------------*/
-Solutions* call_bod() {
+BodSolutions* call_bod() {
     float runtime;
     struct timeval tstart, tend;
 
     initialize_parameters();
-    Solutions* solutions = malloc(num_gnodes * sizeof(Solutions));
+    BodSolutions* solutions_array = malloc(num_gnodes * sizeof(BodSolutions));
+    
+    // Initialize each Solutions struct in the array
+    for (unsigned i = 0; i < num_gnodes; ++i) {
+        solutions_array[i].number_of_solution = 0;
+        solutions_array[i].head = NULL;
+    }
+    
     gettimeofday(&tstart, NULL);
 
     //BOD
-    bod();
+    bod(solutions_array);
 
     gettimeofday(&tend, NULL);
     runtime = 1.0 * (tend.tv_sec - tstart.tv_sec) + 1.0 * (tend.tv_usec - tstart.tv_usec) / 1000000.0;
 
-    printf("%lld;%f;%llu;%llu\n",
-        start_state->id + 1,
-        runtime * 1000,
-        stat_generated,
-        stat_expansions);
-    return solutions;
+//     printf("%lld;%f;%llu;%llu\n",
+//         start_state->id + 1,
+//         runtime * 1000,
+//         stat_generated,
+//         stat_expansions);
+    return solutions_array;
 }

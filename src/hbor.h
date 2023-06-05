@@ -98,6 +98,7 @@ class B3HEPV {
     void read_adjacent_table();
     int boaPathRetrievalFromFile(int snode, int dnode, const std::string& filename);
     void readDataFromFile(GraphData* graphData, const std::string& filename); 
+    void cleanupGraphDataVector();
 };
 
 void precomputation(const std::string & mapName);
