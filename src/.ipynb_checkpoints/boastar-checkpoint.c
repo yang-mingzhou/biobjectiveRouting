@@ -11,11 +11,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 gnode* graph_node;
 unsigned num_gnodes;
-unsigned adjacent_table[MAXNODES][MAXNEIGH];
-unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 unsigned goal, start;
 gnode* start_state;
 gnode* goal_state;
@@ -30,6 +31,46 @@ unsigned solutions[MAX_SOLUTIONS][2];
 unsigned nsolutions = 0;
 unsigned stat_pruned = 0;
 
+
+unsigned **adjacent_table;
+unsigned **pred_adjacent_table;
+
+
+void allocateMemoryForTable(unsigned num_gnodes, unsigned num_arcs) {
+    double ratio = (double)num_arcs / num_gnodes ;
+    unsigned numNeighbors = (unsigned) round(ratio);
+    if (numNeighbors<10){
+        numNeighbors = 45;
+    }
+    else {
+        numNeighbors = 2000*numNeighbors;
+    }
+
+    adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    pred_adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    if(adjacent_table == NULL || pred_adjacent_table == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    for (unsigned i = 0; i < num_gnodes; ++i) {
+        adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        pred_adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        if(adjacent_table[i] == NULL || pred_adjacent_table[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
+    }
+}
+
+void freeMemoryForTable(unsigned numNodes) {
+    for (unsigned i = 0; i < numNodes; ++i) {
+        free(adjacent_table[i]);
+        free(pred_adjacent_table[i]);
+    }
+    free(adjacent_table);
+    free(pred_adjacent_table);
+}
 
 void initialize_parameters() {
     start_state = &graph_node[start];

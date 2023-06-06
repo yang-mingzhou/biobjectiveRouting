@@ -107,6 +107,8 @@ gnode* posheap_dij(int i) {
 snode* heap[HEAPSIZE];
 unsigned long int heapsize = 0;
 
+
+
 // ---------------------------------------------------------------
 void percolatedown(int hole, snode* tmp) {
   int child;
@@ -128,6 +130,9 @@ void percolatedown(int hole, snode* tmp) {
     heap[hole]->heapindex = hole;
   }
 }
+
+
+
 /* --------------------------------------------------------------- */
 void percolateup(int hole, snode* tmp) {
   if (heapsize != 0) {

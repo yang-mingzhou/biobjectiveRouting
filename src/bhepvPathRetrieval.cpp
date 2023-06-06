@@ -24,7 +24,7 @@ void printQueryTimes(const std::vector<double>& hborQueryTimes, const std::vecto
 
 void processQueries(const std::string& mapName, int nPar) {
     
-    int queryCount = 5;
+    int queryCount = -1;
     std::string queryFileName = "../Queries/" + mapName + "-queries";
     std::ifstream queryFile(queryFileName);
     if (!queryFile) {
@@ -46,6 +46,9 @@ void processQueries(const std::string& mapName, int nPar) {
     
     std::string line;
     int queryID = 0;
+    
+    double hborQueryTimeSum = 0.0, boaQueryTimeSum = 0.0;
+    
     while (std::getline(queryFile, line) && (queryCount <= 0 || queryID < queryCount)) {
 
         int startNode, endNode;
@@ -79,11 +82,17 @@ void processQueries(const std::string& mapName, int nPar) {
         
         queryID++;
         
-        
+        boaQueryTimeSum += boaQueryTime;
+        hborQueryTimeSum += hborQueryTime;
     }
     
     bhepv.freeGraphDataVector();
     printQueryTimes(hborQueryTimes, boaQueryTimes);
+    // Calculate the average times and print them
+    double hborAverageTime = hborQueryTimes.size() > 0 ? hborQueryTimeSum / hborQueryTimes.size() : 0;
+    double boaAverageTime = boaQueryTimes.size() > 0 ? boaQueryTimeSum / boaQueryTimes.size() : 0;
+    std::cout << "Average HBOR query time: " << hborAverageTime << " seconds.\n";
+    std::cout << "Average BOA query time: " << boaAverageTime << " seconds.\n";
    
 }
 

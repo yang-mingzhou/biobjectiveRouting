@@ -1,5 +1,4 @@
 #include "bhepv.hpp"
-
 #include <string>
 #include <sstream>
 
@@ -545,23 +544,23 @@ void BHEPV::encodeFragmentPathView(){
 
 void BHEPV::encodeBoundaryPathView(){
     GraphData graphData;
-    // Initialize graphData
-//     for (const auto& pair : boundaryIdMap) {
-//         cout<< "boundaaryNodeMap:" << pair.first << " , " << pair.second<< endl;
-//     }
-    
     bod_initializeGraphData(&graphData, boundaryNodes.size(), boundaryGraph.size());
     for (unsigned i=0; i<boundaryGraph.size() ; ++i){
         graphData.edgeVectors[i][0]  = boundaryIdMap[boundaryGraph[i][0]];
         graphData.edgeVectors[i][1]  = boundaryIdMap[boundaryGraph[i][1]];
         graphData.edgeVectors[i][2]  = boundaryGraph[i][2];
         graphData.edgeVectors[i][3]  = boundaryGraph[i][3];
-//         cout<< " boundaryGraph[i][0]" <<  graphData.edgeVectors[i][0] << graphData.edgeVectors[i][1] <<endl;
     }
     const GraphData* graphDataPtr = &graphData;
-//     cout<< "boundaryPath"<< graphDataPtr->numOfGnode << ", "<< graphDataPtr->numOfArcs;
-//     bod_printEdgeVectors(graphDataPtr);
+    int cnt = 0;
     for (const auto& pair : boundaryIdMap) {
+        if (cnt%50==0){
+            cout<< "Endcoding boundary path view: "<< cnt << " out of " << boundaryIdMap.size()<<endl;
+        }
+        cnt ++;
+//         if (cnt == 10){
+//             break;
+//         }
         int bnodeInOriginGraph = pair.first;
         int bnodeInBoundaryGraph = pair.second;
         BodSolutions* solutions_array = bod_paretoPathsInFragment(bnodeInBoundaryGraph, graphDataPtr);
@@ -581,19 +580,61 @@ void BHEPV::encodeBoundaryPathView(){
             boundaryEncodedPathView[bnodeInOriginGraph][destNodeInOriginGraph] = solution_list;
         }
         
-//         for (unsigned i = 0; i < graphData.numOfGnode; ++i) {
-//             SolutionNode* current = solutions_array[i].head;
-//             while (current != NULL) {
-//                 SolutionNode* next = current->next;
-//                 free(current);
-//                 current = next;
-//             }
-//         }
         free(solutions_array);         
     }
   
     bod_cleanupGraphData(&graphData);
 }
+
+// void BHEPV::encodeBoundaryPathView() {
+//     GraphData graphData;
+//     bod_initializeGraphData(&graphData, boundaryNodes.size(), boundaryGraph.size());
+    
+//     for (unsigned i=0; i<boundaryGraph.size() ; ++i){
+//         graphData.edgeVectors[i][0]  = boundaryIdMap[boundaryGraph[i][0]];
+//         graphData.edgeVectors[i][1]  = boundaryIdMap[boundaryGraph[i][1]];
+//         graphData.edgeVectors[i][2]  = boundaryGraph[i][2];
+//         graphData.edgeVectors[i][3]  = boundaryGraph[i][3];
+//     }
+
+//     const GraphData* graphDataPtr = &graphData;
+//     int cnt = 0;
+    
+//     std::vector<std::pair<int, int>> boundaryIdPairs(boundaryIdMap.begin(), boundaryIdMap.end());
+//     #pragma omp parallel for
+//     for (int i = 0; i < boundaryIdPairs.size(); ++i) {
+//         std::pair<int, int> pair = boundaryIdPairs[i];
+//         int bnodeInOriginGraph = pair.first;
+//         int bnodeInBoundaryGraph = pair.second;
+//         BodSolutions* solutions_array = bod_paretoPathsInFragment(bnodeInBoundaryGraph, graphDataPtr);
+
+//         for (const auto& pairDest : boundaryIdMap) {
+//             int destNodeInOriginGraph = pairDest.first;
+//             int destNodeIndexInBoundaryGraph = pairDest.second-1;
+//             std::vector<std::vector<int>> solution_list;
+//             SolutionNode* current = solutions_array[destNodeIndexInBoundaryGraph].head;
+            
+//             while (current != NULL) {
+//                 std::vector<int> solution({current->solution[0], current->solution[1]});
+//                 solution_list.push_back(solution);
+//                 SolutionNode* next = current->next;
+//                 free(current);
+// //                 boundaryEncodedPathView[bnodeInOriginGraph][destNodeInOriginGraph] = solution_list;
+//                 current = next;
+//             }
+            
+//             #pragma omp critical
+//             {
+//                 boundaryEncodedPathView[bnodeInOriginGraph][destNodeInOriginGraph] = solution_list;
+//             }
+//         }
+
+//         free(solutions_array);
+//     }
+
+//     bod_cleanupGraphData(&graphData);
+// }
+
 
 void BHEPV::loadFragmentIndex(){
     // read fragment index
@@ -618,8 +659,6 @@ void BHEPV::loadFragmentIndex(){
 
 
 
-
-
 void BHEPV::PrecomputationAndSave(){
     readOriginGraph();
     readPartition();
@@ -632,10 +671,14 @@ void BHEPV::PrecomputationAndSave(){
     encodeFragmentPathView();
     // Generate boundary multigraph based on fragment encoded path view
     saveBoundaryGraph();
+    cout<< "Boundary Graph Saved" << endl;
    // bod for all boundaryNodes in boundary multigraph
     encodeBoundaryPathView();
+    cout<< "Boundary Path View Encoded" << endl;
     saveEncodedPathView();    
+    cout<< "BHEPV Saved" << endl;
     saveBoundaryNodePartition();
+    
 }
 
 

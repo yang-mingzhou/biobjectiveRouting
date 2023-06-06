@@ -38,6 +38,7 @@ struct snode // BOA*'s search nodes
   snode *searchtree;
   snode *gopnext;
   snode *gopprev;
+  int* visited_in_this_path;
 };
 
 #endif

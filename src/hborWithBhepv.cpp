@@ -179,7 +179,7 @@ vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int
         snodeInFragment = fragmentIndex[snode-1][1];
         dnodeInFragment = fragmentIndex[dnode-1][1];
     }
-//     cout<< "snodeInFragment: "<<snodeInFragment<<dnodeInFragment<<endl;
+    // cout<< "snodeInFragment: "<<snodeInFragment<<dnodeInFragment<<endl;
     const GraphData currentGraph = graphDataVector[fragmentId+1];
     const GraphData* graphDataPtr = &currentGraph;
     unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
@@ -189,6 +189,7 @@ vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int
         pathCostSet.push_back(currentSol);
         i++;
     } 
+    cout<<pathCostSet.size()<<endl;
     return pathCostSet;
 }
 

@@ -10,11 +10,13 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
+#include <string.h>
 
 gnode* graph_node;
 unsigned num_gnodes;
-unsigned adjacent_table[MAXNODES][MAXNEIGH];
-unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 unsigned goal, start;
 gnode* start_state;
 gnode* goal_state;
@@ -27,6 +29,46 @@ unsigned long long int minf_solution = LARGE;
 // unsigned solutions[MAX_SOLUTIONS][2];
 
 unsigned stat_pruned = 0;
+
+unsigned **adjacent_table;
+unsigned **pred_adjacent_table;
+
+
+void allocateMemoryForTable(unsigned num_gnodes, unsigned num_arcs) {
+    double ratio = (double)num_arcs / num_gnodes ;
+    unsigned numNeighbors = (unsigned) round(ratio);
+    if (numNeighbors<10){
+        numNeighbors = 45;
+    }
+    else {
+        numNeighbors = 2000*numNeighbors;
+    }
+
+    adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    pred_adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    if(adjacent_table == NULL || pred_adjacent_table == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    for (unsigned i = 0; i < num_gnodes; ++i) {
+        adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        pred_adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        if(adjacent_table[i] == NULL || pred_adjacent_table[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
+    }
+}
+
+void freeMemoryForTable(unsigned numNodes) {
+    for (unsigned i = 0; i < numNodes; ++i) {
+        free(adjacent_table[i]);
+        free(pred_adjacent_table[i]);
+    }
+    free(adjacent_table);
+    free(pred_adjacent_table);
+}
 
 
 
@@ -43,12 +85,14 @@ void initialize_parameters() {
 
 snode* new_node() {
     snode* state = (snode*)malloc(sizeof(snode));
+//     state->visited_in_this_path = calloc(num_gnodes, sizeof(int)); // Initializes all elements to 0
     state->heapindex = 0;
     return state;
 }
 
 void free_node(snode* node) {
     if(node != NULL) { // always good to check if the pointer is not NULL
+//         free(node->visited_in_this_path);
         free(node);
         node = NULL; // good practice to set freed pointer to NULL
     }
@@ -68,6 +112,7 @@ int bod(BodSolutions* s_array) {
     start_node->g2 = 0;
     start_node->key = 0;
     start_node->searchtree = NULL;
+//     start_node->visited_in_this_path[start] = 1;
     insertheap(start_node);
 
     stat_expansions = 0;
@@ -124,6 +169,9 @@ int bod(BodSolutions* s_array) {
 
             if (newg2 >= graph_node[nsucc].gmin)
                 continue;
+            
+//             if (n->visited_in_this_path[nsucc])
+//                 continue;
  
 //             if (next_recycled > 0) { //to reuse pruned nodes in memory
 //                 pred = recycled_nodes[--next_recycled];
@@ -136,15 +184,22 @@ int bod(BodSolutions* s_array) {
             stat_generated++;
 
             newkey = newg1 * (double)BASE + newg2;
-            pred->searchtree = n;
+//             pred->searchtree = n;
             pred->g1 = newg1;
             pred->g2 = newg2;
             pred->key = newkey;
+            
+//             // Copy visited_in_this_path array from the current node to the new node
+//             memcpy(pred->visited_in_this_path, n->visited_in_this_path, num_gnodes * sizeof(int));
+//             // Mark the new node as visited in the new node's path
+//             pred->visited_in_this_path[nsucc] = 1;
+
             insertheap(pred);
         }
-        if (next_recycled < MAX_RECYCLE) {
-            recycled_nodes[next_recycled++] = n;
-        }
+         free_node(n);
+//         if (next_recycled < MAX_RECYCLE) {
+//             recycled_nodes[next_recycled++] = n;
+//         }
     }
     int freeCnt;
     for(freeCnt=0;freeCnt < next_recycled;++freeCnt ){

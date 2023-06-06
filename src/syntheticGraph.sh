@@ -7,8 +7,8 @@ gcc -O3 -std=c99 -o bhepvPrecomputation.o bhepvPrecomputation.cpp bhepv.cpp bodP
 gcc -O3 -std=c99 -o  bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
 
 
-MAP="BAY"
-NPARTITIONS="25"
+MAP="10k"
+NPARTITIONS="2"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"

@@ -46,6 +46,8 @@ void bod_assign_global_variables(const GraphData* graphData) {
 	int i, ori, dest, dist, t;
     num_gnodes = graphData->numOfGnode;
 	int num_arcs = graphData->numOfArcs;
+    
+    allocateMemoryForTable(num_gnodes, num_arcs);
 
 	for (i = 0; i < num_gnodes; i++){
         adjacent_table[i][0] = 0;
@@ -103,6 +105,7 @@ BodSolutions* bod_paretoPathsInFragment(int s_node,  const GraphData* graphData)
 //     bod_printEdgeVectors(graphData);
     new_graph();
 	BodSolutions* result = call_bod();
+    freeMemoryForTable(num_gnodes);
 	return result;
 }
 

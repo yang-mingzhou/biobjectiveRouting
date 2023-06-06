@@ -5,8 +5,8 @@ gcc -O3 -std=c++11 -o kahip.o kahip.cpp  -lstdc++
 gcc -O3 -std=c99 -o precomputation.o precomputation.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lstdc++
 gcc -O3 -std=c++11 -o m.o m.cpp -lstdc++
 
-MAP="COL"
-NPARTITIONS="8"
+MAP="test"
+NPARTITIONS="3"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"
