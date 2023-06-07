@@ -9,12 +9,15 @@ using namespace std;
 
 
 int main() {
-    HBORBasic bhepv = HBORBasic("test", 3);
+    HBORBasic bhepv = HBORBasic("BAY0", 20);
     bhepv.load();
-    cout<< bhepv.hbor(3,5) << endl;
-    cout<< bhepv.hbor(8,1) << endl;
-    cout<< bhepv.hbor(1,4) << endl;
-    cout<< bhepv.hbor(4,5) << endl;
-    cout<< bhepv.hbor(3,7) << endl;
+    cout<< bhepv.hbor(85217, 110419) << endl;
+    auto startBoa = std::chrono::high_resolution_clock::now();
+    cout<< bhepv.hbor(50362, 135758) << endl;
+    auto endBoa = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> boaDuration = endBoa - startBoa;
+    double boaQueryTime = boaDuration.count();
+    cout<<"time: "<<boaQueryTime<<endl;
+    cout<< bhepv.hbor(155475, 6885) << endl;
     return 0;
 }

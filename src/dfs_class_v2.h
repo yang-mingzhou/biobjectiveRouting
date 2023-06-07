@@ -23,6 +23,11 @@ class Bi_objective_DFS{
     string folderpath;
     std::unordered_map<int, int> nodePartitionMap;
     
+//     // Destructor
+//     ~Bi_objective_DFS() {
+//         delete allpath;
+//     }
+    
 
     // initialization
     Bi_objective_DFS(const string& foldername) {
@@ -281,6 +286,19 @@ class Bi_objective_DFS{
     Function:
     Use DFS to traverse all possible paths among one pair of nodes(s_node, d_node) of the map. The cost the the paths is the sums of each component of the cost with the edges it visited. Each time the DFS expand, call isDominated(s_node, d_node, cost1, cost2, vector<vector<int>>existingLUBs). If returned false, continue. If returned true, backtrack from the node and expand on other node.
     */
+//     vector<vector<int>> traverse()
+//     {
+//         vector<int> current_path;
+//         vector<vector<int>> total_cost_record;
+//         vector<int> start_cost = {0, 0, 0, 0};
+//         bool withInFragmentFlag = true;
+
+//         vector<vector<int>> *all_paths = new vector<vector<int>>();
+//         DFS(current_s_node, current_path, total_cost_record, start_cost, all_paths,withInFragmentFlag);
+
+//         return *all_paths;
+//     }
+    
     vector<vector<int>> traverse()
     {
         vector<int> current_path;
@@ -289,9 +307,13 @@ class Bi_objective_DFS{
         bool withInFragmentFlag = true;
 
         vector<vector<int>> *all_paths = new vector<vector<int>>();
-        DFS(current_s_node, current_path, total_cost_record, start_cost, all_paths,withInFragmentFlag);
+        DFS(current_s_node, current_path, total_cost_record, start_cost, all_paths, withInFragmentFlag);
 
-        return *all_paths;
+        vector<vector<int>> returned_paths = *all_paths;
+
+        delete all_paths;  // Deallocate memory after copying the data
+
+        return returned_paths;
     }
 
     /*
@@ -432,6 +454,7 @@ class Bi_objective_DFS{
 //             jsonfile << s_node_key.dump();
 //             jsonfile.close();
         }
+        
     }
 
     void convert_map_of_map_to_json_file() {

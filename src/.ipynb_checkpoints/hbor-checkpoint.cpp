@@ -8,6 +8,7 @@
 #include <time.h>
 #include <algorithm>
 #include <string>
+#include <climits>
 #include "hbor.h"
 #include "json.hpp"
 #include "biobjectiveGraph.h"
@@ -21,7 +22,7 @@ using json = nlohmann::json;
 
 
 
-void printEdgeVectorsCPP(const struct GraphData* graphData) {
+void printEdgeVectorsCPP(const GraphData* graphData) {
     int num_arcs = graphData->numOfArcs;
 
     std::cout << "Edge Vectors:" << std::endl;
@@ -469,29 +470,55 @@ vector<Solution> B3HEPV::expandPathForBoundaryPathSet(vector<BoundaryPath> bound
     return expendedPathCostSet;
 }   
 
+// vector<Solution> B3HEPV::dominanceCheck(vector<Solution> superParetoCostSet){
+//     vector<Solution> nonDominatedSolutions;
+//     Solution currentSol, comparedSol;
+//     vector<int> paretoIndex(superParetoCostSet.size(), 1);
+//     for (size_t i = 0; i < superParetoCostSet.size(); ++i) {
+//         if (paretoIndex[i]==1){
+//             currentSol = superParetoCostSet[i];
+//             for (size_t j = i+1; j < superParetoCostSet.size(); ++j){
+//                 comparedSol = superParetoCostSet[j];
+//                 if (currentSol.isDominatedBy(comparedSol)){
+//                     paretoIndex[i]=0;
+//                 }
+//                 if (comparedSol.isDominatedBy(currentSol)){
+//                     paretoIndex[j]=0;
+//                 }
+//             }   
+//             if (paretoIndex[i]==1){
+//             nonDominatedSolutions.push_back(currentSol);
+//             }
+//         }
+//     }
+//     return nonDominatedSolutions;
+// }
+
+
 vector<Solution> B3HEPV::dominanceCheck(vector<Solution> superParetoCostSet){
     vector<Solution> nonDominatedSolutions;
-    Solution currentSol, comparedSol;
-    vector<int> paretoIndex(superParetoCostSet.size(), 1);
-    for (size_t i = 0; i < superParetoCostSet.size(); ++i) {
-        if (paretoIndex[i]==1){
-            currentSol = superParetoCostSet[i];
-            for (size_t j = i+1; j < superParetoCostSet.size(); ++j){
-                comparedSol = superParetoCostSet[j];
-                if (currentSol.isDominatedBy(comparedSol)){
-                    paretoIndex[i]=0;
-                }
-                if (comparedSol.isDominatedBy(currentSol)){
-                    paretoIndex[j]=0;
-                }
-            }   
-            if (paretoIndex[i]==1){
-            nonDominatedSolutions.push_back(currentSol);
-            }
+    
+    // Sort solutions lexicographically by cost1, then cost2
+    std::sort(superParetoCostSet.begin(), superParetoCostSet.end(),
+              [](const Solution &a, const Solution &b) {
+                  return std::tie(a.cost1, a.cost2) < std::tie(b.cost1, b.cost2);
+              });
+
+    int minCost2 = INT_MAX;
+
+    for (const auto& sol : superParetoCostSet) {
+        if (sol.cost2 >= minCost2) {
+            // This solution is dominated, skip it
+            continue;
         }
+        minCost2 = sol.cost2;
+        nonDominatedSolutions.push_back(sol);
     }
+
     return nonDominatedSolutions;
 }
+
+
 
 
 int B3HEPV::hbor(int snode, int dnode){
@@ -522,7 +549,7 @@ void B3HEPV::read_adjacent_table() {
     int num_arcs = 0;
 
     // Initialize graphData
-    initializeGraphData(&graphData, num_nodes, num_arcs);
+    initializeGraphDataBOA(&graphData, num_nodes, num_arcs);
 
     // Read data from file and assign it to graphData
     readDataFromFile(&graphData, filenameEntirGraph);
@@ -536,7 +563,7 @@ void B3HEPV::read_adjacent_table() {
     for (int i =1; i<nPartitions+1; i++ ){
         GraphData subGraphData;
         string filenameSubGraph = fileFolderName+"/fragments/fragment"+std::to_string(i-1)+".txt";
-        initializeGraphData(&subGraphData, num_nodes, num_arcs);
+        initializeGraphDataBOA(&subGraphData, num_nodes, num_arcs);
         // Read data from file and assign it to graphData
         readDataFromFile(&subGraphData, filenameSubGraph);
         graphDataVector.push_back(subGraphData);
@@ -583,20 +610,20 @@ void B3HEPV::cleanupGraphDataVector() {
 }
 
 
-int B3HEPV::boaPathRetrievalFromFile(int snode, int dnode, const string& filename) {
-    // convert filename to char *
-    int nsolutions = 0;
-    const char* charFilename = filename.c_str();
-    unsigned (*solutions)[2] = paretoPathsInFragmentChar(snode, dnode, charFilename);
-    // Access and print the values
-    int i = 0;
-    while (solutions[i][0] > 0) {
-        // cout<< "c1: "<< solutions[i][0] << ", c2: "<< solutions[i][1] << endl;
-        nsolutions+=1;
-        i++;
-    }   
-    return nsolutions;
-}
+// int B3HEPV::boaPathRetrievalFromFile(int snode, int dnode, const string& filename) {
+//     // convert filename to char *
+//     int nsolutions = 0;
+//     const char* charFilename = filename.c_str();
+//     unsigned (*solutions)[2] = paretoPathsInFragmentChar(snode, dnode, charFilename);
+//     // Access and print the values
+//     int i = 0;
+//     while (solutions[i][0] > 0) {
+//         // cout<< "c1: "<< solutions[i][0] << ", c2: "<< solutions[i][1] << endl;
+//         nsolutions+=1;
+//         i++;
+//     }   
+//     return nsolutions;
+// }
 
 
 

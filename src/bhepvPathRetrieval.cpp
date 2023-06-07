@@ -4,6 +4,7 @@
 #include <array>
 #include <iostream>  
 #include <chrono> // Include the chrono library
+#include <sys/resource.h>
 #include "hborWithBhepv.hpp"
 using namespace std;
 
@@ -22,6 +23,20 @@ void printQueryTimes(const std::vector<double>& hborQueryTimes, const std::vecto
     std::cout << std::endl;
 }
 
+void printMemoryUsage()
+{
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+    std::cout << "Memory usage: " << usage.ru_maxrss << "KB" << std::endl;
+}
+
+long getMemoryUsage()
+{
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+    return usage.ru_maxrss;
+}
+
 void processQueries(const std::string& mapName, int nPar) {
     
     int queryCount = -1;
@@ -32,22 +47,30 @@ void processQueries(const std::string& mapName, int nPar) {
         return;
     }
     
+    
+    
     auto startTimeRead = std::chrono::high_resolution_clock::now();
     HBORBasic bhepv = HBORBasic(mapName, nPar);
+    long startMemory = getMemoryUsage();
     bhepv.load();
+    long endMemory = getMemoryUsage();
     auto endTimeRead = std::chrono::high_resolution_clock::now();
     auto durationRead = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeRead - startTimeRead);
     std::cout<<"Read BHPV time:" << durationRead.count() << " milliseconds" << std::endl;
-
-  
-    
+    std::cout << "BHEPV memory usage: " << endMemory-startMemory << "KB.\n";
     std::vector<double> hborQueryTimes; // To store the times for hbor method
     std::vector<double> boaQueryTimes; // To store the times for boaPathRetrieval method
+    
+    std::vector<long> hborMemoryUsages; // To store the memory usages for hbor method
+    std::vector<long> boaMemoryUsages; // To store the memory usages for boaPathRetrieval method
+
     
     std::string line;
     int queryID = 0;
     
     double hborQueryTimeSum = 0.0, boaQueryTimeSum = 0.0;
+    
+    
     
     while (std::getline(queryFile, line) && (queryCount <= 0 || queryID < queryCount)) {
 
@@ -58,20 +81,29 @@ void processQueries(const std::string& mapName, int nPar) {
             continue;
         }
         cout<< "sNode: " <<startNode << ", dNode: " << endNode<<endl;
-        
+        startMemory = getMemoryUsage();
         // Perform the boaPathRetrieval query and measure the time
         auto startBoa = std::chrono::high_resolution_clock::now();
         int boaNsolutions = bhepv.boa(startNode, endNode); 
         auto endBoa = std::chrono::high_resolution_clock::now();
+        endMemory = getMemoryUsage();
+        boaMemoryUsages.push_back(endMemory - startMemory);        
+
         std::chrono::duration<double> boaDuration = endBoa - startBoa;
         double boaQueryTime = boaDuration.count();
         boaQueryTimes.push_back(boaQueryTime);
         
+        
         // Perform the hbor query and measure the time
+        startMemory = getMemoryUsage();
         auto startHbor = std::chrono::high_resolution_clock::now();
         int hborNsolutions = 0;
         hborNsolutions = bhepv.hbor(startNode, endNode); 
         auto endHbor = std::chrono::high_resolution_clock::now();
+        
+        endMemory = getMemoryUsage();
+        hborMemoryUsages.push_back(endMemory - startMemory);
+        
         std::chrono::duration<double> hborDuration = endHbor - startHbor;
         double hborQueryTime = hborDuration.count();
         hborQueryTimes.push_back(hborQueryTime);
@@ -93,6 +125,14 @@ void processQueries(const std::string& mapName, int nPar) {
     double boaAverageTime = boaQueryTimes.size() > 0 ? boaQueryTimeSum / boaQueryTimes.size() : 0;
     std::cout << "Average HBOR query time: " << hborAverageTime << " seconds.\n";
     std::cout << "Average BOA query time: " << boaAverageTime << " seconds.\n";
+    
+    
+    // Compute average memory usages
+    long hborAverageMemoryUsage = std::accumulate(hborMemoryUsages.begin(), hborMemoryUsages.end(), 0L) / hborMemoryUsages.size();
+    long boaAverageMemoryUsage = std::accumulate(boaMemoryUsages.begin(), boaMemoryUsages.end(), 0L) / boaMemoryUsages.size();
+
+    std::cout << "Average HBOR memory usage: " << hborAverageMemoryUsage << "KB.\n";
+    std::cout << "Average BOA memory usage: " << boaAverageMemoryUsage << "KB.\n";
    
 }
 

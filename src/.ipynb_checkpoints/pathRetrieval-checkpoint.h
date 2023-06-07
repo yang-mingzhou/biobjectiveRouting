@@ -11,8 +11,8 @@ extern "C" {
 // void read_adjacent_table(const char* filename, unsigned & numOfGnode,  unsigned input_adjacent_table[MAXNODES][MAXNEIGH], unsigned input_pred_adjacent_table[MAXNODES][MAXNEIGH]);
     
 
-// void initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs);
-// void cleanupGraphData(GraphData* graphData) ;
+void initializeGraphDataBOA(GraphData* graphData, int num_nodes, int num_arcs);
+void cleanupGraphData(GraphData* graphData) ;
 void printEdgeVectors(const GraphData* graphData);
 
 void assign_global_variables(const GraphData* graphData);    

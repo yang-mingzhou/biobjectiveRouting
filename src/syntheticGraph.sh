@@ -4,11 +4,11 @@ module load gcc/11.3.0
 gcc -O3 -std=c++11 -o kahip.o kahip.cpp  -lstdc++
 # -g -fsanitize=address
 gcc -O3 -std=c99 -o bhepvPrecomputation.o bhepvPrecomputation.cpp bhepv.cpp bodPathRetrieval.c heap.c bod.c graph.c -lm -lstdc++
-gcc -O3 -std=c99 -o  bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
+gcc -O3 -std=c99 -o bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
 
 
-MAP="10k"
-NPARTITIONS="2"
+MAP="BAY2"
+NPARTITIONS="50"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"

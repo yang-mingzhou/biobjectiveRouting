@@ -8,22 +8,22 @@
 #include <unistd.h>
 #include <string.h>
 
-// void initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
-//     graphData->numOfGnode = num_nodes;
-//     graphData->numOfArcs = num_arcs;
+void initializeGraphDataBOA(GraphData* graphData, int num_nodes, int num_arcs) {
+    graphData->numOfGnode = num_nodes;
+    graphData->numOfArcs = num_arcs;
 
-//     graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
-//     for (int i = 0; i < num_arcs; i++) {
-//         graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
-//     }
-// }
+    graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
+    for (int i = 0; i < num_arcs; i++) {
+        graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
+    }
+}
 
-// void cleanupGraphData(GraphData* graphData) {
-//     for (int i = 0; i < graphData->numOfArcs; i++) {
-//         free(graphData->edgeVectors[i]);
-//     }
-//     free(graphData->edgeVectors);
-// }
+void cleanupGraphData(GraphData* graphData) {
+    for (int i = 0; i < graphData->numOfArcs; i++) {
+        free(graphData->edgeVectors[i]);
+    }
+    free(graphData->edgeVectors);
+}
 
 void printEdgeVectors(const GraphData* graphData) {
     int num_arcs = graphData->numOfArcs;

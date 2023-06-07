@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <climits>
 
 using json = nlohmann::json;
 using namespace std;
@@ -239,6 +240,56 @@ std::vector<BiobjectivePath> HBORBasic::generateCombinations(
     return result;
 }
 
+// vector<BiobjectivePath> HBORBasic::dominanceCheck(vector<BiobjectivePath> superParetoCostSet){
+// //     cout<< "superParetoCostSet size: " << superParetoCostSet.size() << endl;
+//     vector<BiobjectivePath> nonDominatedSolutions;
+//     BiobjectivePath currentSol, comparedSol;
+//     vector<int> paretoIndex(superParetoCostSet.size(), 1);
+//     for (size_t i = 0; i < superParetoCostSet.size(); ++i) {
+//         if (paretoIndex[i]==1){
+//             currentSol = superParetoCostSet[i];
+//             for (size_t j = i+1; j < superParetoCostSet.size(); ++j){
+//                 comparedSol = superParetoCostSet[j];
+//                 if (currentSol.isDominatedBy(comparedSol)){
+//                     paretoIndex[i]=0;
+//                 }
+//                 if (comparedSol.isDominatedBy(currentSol)|| currentSol.eq(comparedSol)){ // remove duplication
+//                     paretoIndex[j]=0;
+//                 }
+
+//             }   
+//             if (paretoIndex[i]==1){
+//             nonDominatedSolutions.push_back(currentSol);
+//             }
+//         }
+//     }
+//     return nonDominatedSolutions;
+// }
+
+vector<BiobjectivePath> HBORBasic::dominanceCheck(vector<BiobjectivePath> superParetoCostSet){
+    vector<BiobjectivePath> nonDominatedSolutions;
+
+    // Sort solutions lexicographically by cost1, then cost2
+    std::sort(superParetoCostSet.begin(), superParetoCostSet.end(),
+              [](const BiobjectivePath &a, const BiobjectivePath &b) {
+                  return std::tie(a.cost1, a.cost2) < std::tie(b.cost1, b.cost2);
+              });
+
+    int minCost2 = INT_MAX;
+
+    for (const auto& sol : superParetoCostSet) {
+        if (sol.cost2 >= minCost2) {
+            // This solution is dominated, skip it
+            continue;
+        }
+        minCost2 = sol.cost2;
+        nonDominatedSolutions.push_back(sol);
+    }
+
+    return nonDominatedSolutions;
+}
+
+
 
 vector<BiobjectivePath> HBORBasic::onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN) {
     // cout << snode << dnode<<sBN << dBN<<endl;
@@ -283,35 +334,11 @@ vector<BiobjectivePath> HBORBasic::onePairBoundaryPathOf(int snode, int dnode, i
         throw std::runtime_error("Missing entry in boundaryEncodedPathView");
     }
     // cout<<onePairBoundaryPathSet.size()<<endl;
-    
     return generateCombinations(headPathSet, interPathSet, tailPathSet);
+//     return dominanceCheck(generateCombinations(headPathSet, interPathSet, tailPathSet));
 }
 
-vector<BiobjectivePath> HBORBasic::dominanceCheck(vector<BiobjectivePath> superParetoCostSet){
-//     cout<< "superParetoCostSet size: " << superParetoCostSet.size() << endl;
-    vector<BiobjectivePath> nonDominatedSolutions;
-    BiobjectivePath currentSol, comparedSol;
-    vector<int> paretoIndex(superParetoCostSet.size(), 1);
-    for (size_t i = 0; i < superParetoCostSet.size(); ++i) {
-        if (paretoIndex[i]==1){
-            currentSol = superParetoCostSet[i];
-            for (size_t j = i+1; j < superParetoCostSet.size(); ++j){
-                comparedSol = superParetoCostSet[j];
-                if (currentSol.isDominatedBy(comparedSol)){
-                    paretoIndex[i]=0;
-                }
-                if (comparedSol.isDominatedBy(currentSol)|| currentSol.eq(comparedSol)){ // remove duplication
-                    paretoIndex[j]=0;
-                }
 
-            }   
-            if (paretoIndex[i]==1){
-            nonDominatedSolutions.push_back(currentSol);
-            }
-        }
-    }
-    return nonDominatedSolutions;
-}
 
 
 
@@ -339,10 +366,16 @@ int HBORBasic::hbor(int snode, int dnode){
     int sfragment = fragmentIndex[snode-1][0];
     int dfragment = fragmentIndex[dnode-1][0];
     
-    // cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
+    cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
     
     vector<int> sBoundaryNode = boundaryNodeSet[sfragment];
     vector<int> dBoundaryNode = boundaryNodeSet[dfragment];
+    
+    if (sfragment==dfragment){
+        vector<BiobjectivePath> infragmentCostSet = boaPathRetrievalWithInFragment(snode, dnode, sfragment);
+        solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
+    }
+    
     for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
         
         sBN = sBoundaryNode[i];
@@ -354,11 +387,10 @@ int HBORBasic::hbor(int snode, int dnode){
             
         }
     }
-    if (sfragment==dfragment){
-        vector<BiobjectivePath> infragmentCostSet = boaPathRetrievalWithInFragment(snode, dnode, sfragment);
-        solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
-    }
 
+    
+    cout<< "boundary path size: " <<solutionSet.size() <<endl;
+    
     vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
 //     for (size_t j = 0; j < paretoSet.size(); ++j){
 //         cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;

@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
     std::cout<<"Read B3HPV time:" << durationTotal.count() << " milliseconds" << std::endl;
 
     
-    startTimeTotal = std::chrono::high_resolution_clock::now();
-    int nBoa = hepv.boaPathRetrieval(startNode, endNode);
-    endTimeTotal = std::chrono::high_resolution_clock::now();
-    durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
-    std::cout<<"nSolutions in boa:" << nBoa << "BOA*: " << durationTotal.count() << " milliseconds" << std::endl;
+//     startTimeTotal = std::chrono::high_resolution_clock::now();
+//     int nBoa = hepv.boaPathRetrieval(startNode, endNode);
+//     endTimeTotal = std::chrono::high_resolution_clock::now();
+//     durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
+//     std::cout<<"nSolutions in boa:" << nBoa << "BOA*: " << durationTotal.count() << " milliseconds" << std::endl;
     
     startTimeTotal = std::chrono::high_resolution_clock::now();
     int nsolutions = hepv.hbor(startNode,endNode);
