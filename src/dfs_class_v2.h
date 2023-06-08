@@ -334,7 +334,7 @@ class Bi_objective_DFS{
             // set s_node, d_node, and respective cost
             current_s_node = key_nodes[i];
             vector<vector<int>> this_pair_paths = traverse();
-            if (i%20 ==0){
+            if (i%100 ==0){
                 cout << "done " << i << endl;
             }
             

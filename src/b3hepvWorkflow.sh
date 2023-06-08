@@ -2,12 +2,12 @@
 module load gcc/11.3.0
 # Compile CPP files
 gcc -O3 -std=c++11 -o kahip.o kahip.cpp  -lstdc++
-gcc -O3 -std=c99 -g -fsanitize=address -o precomputation.o precomputation.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
-gcc -O3 -std=c++11 -g -fsanitize=address -o encodeBhepv.o m.cpp -lm -lstdc++
+gcc -O3 -std=c99 -o precomputation.o precomputation.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
+gcc -O3 -std=c++11 -o encodeBhepv.o m.cpp -lm -lstdc++
 gcc -O3 -std=c99 -o online.o onlineRouting.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
 
-MAP="test"
-NPARTITIONS="3"
+MAP="BAY20"
+NPARTITIONS="20"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"
