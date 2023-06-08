@@ -13,10 +13,26 @@
 using namespace std;
 
 
+void printQueryTimes(const std::vector<double>& hborQueryTimes, const std::vector<double>& boaQueryTimes) {
+    std::cout << "HBOR Query Times (in ms):" << std::endl;
+    for (const auto& time : hborQueryTimes) {
+        std::cout << time*1000 << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "BOA Query Times (in ms):" << std::endl;
+    for (const auto& time : boaQueryTimes) {
+        std::cout << time*1000 << " ";
+    }
+    std::cout << std::endl;
+}
+
+
+
 // Function to process each query and calculate the statistics
 void processQueries(const std::string& mapName, int nPar) {
     
-    int queryCount = 5;
+    int queryCount = -1;
     std::string queryFileName = "../Queries/" + mapName + "-queries";
     std::ifstream queryFile(queryFileName);
     if (!queryFile) {
@@ -29,14 +45,19 @@ void processQueries(const std::string& mapName, int nPar) {
     auto endTimeRead = std::chrono::high_resolution_clock::now();
     auto durationRead = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeRead - startTimeRead);
     std::cout<<"Read B3HPV time:" << durationRead.count() << " milliseconds" << std::endl;
-
-  
     
     std::vector<double> hborQueryTimes; // To store the times for hbor method
     std::vector<double> boaQueryTimes; // To store the times for boaPathRetrieval method
+
+
     
     std::string line;
     int queryID = 0;
+    
+    double hborQueryTimeSum = 0.0, boaQueryTimeSum = 0.0;
+    
+    
+    
     while (std::getline(queryFile, line) && (queryCount <= 0 || queryID < queryCount)) {
 
         int startNode, endNode;
@@ -46,86 +67,52 @@ void processQueries(const std::string& mapName, int nPar) {
             continue;
         }
         cout<< "sNode: " <<startNode << ", dNode: " << endNode<<endl;
-        
+
         // Perform the boaPathRetrieval query and measure the time
         auto startBoa = std::chrono::high_resolution_clock::now();
         int boaNsolutions = hepv.boaPathRetrieval(startNode, endNode); 
         auto endBoa = std::chrono::high_resolution_clock::now();
+   
+
         std::chrono::duration<double> boaDuration = endBoa - startBoa;
+//         auto boaDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endBoa - startBoa);
         double boaQueryTime = boaDuration.count();
         boaQueryTimes.push_back(boaQueryTime);
         
+        
         // Perform the hbor query and measure the time
+
         auto startHbor = std::chrono::high_resolution_clock::now();
         int hborNsolutions = 0;
-//         hborNsolutions = hepv.hbor(startNode, endNode); 
+        hborNsolutions = hepv.hbor(startNode, endNode); 
         auto endHbor = std::chrono::high_resolution_clock::now();
+
+//         auto hborDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endHbor - startHbor);
         std::chrono::duration<double> hborDuration = endHbor - startHbor;
         double hborQueryTime = hborDuration.count();
         hborQueryTimes.push_back(hborQueryTime);
-        
-        
-        std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR: " << hborNsolutions << " solutions, BOA: " << boaNsolutions << " solutions." << std::endl;
-        std::cout << "Time used - HBOR: " << hborQueryTime << " seconds, BOA: " << boaQueryTime << " seconds." << std::endl;
+//         std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR with B3HEPV: " << hborNsolutions << " solutions" << std::endl;
+       std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR with B3HEPV: " << hborNsolutions << " solutions, BOA: " << boaNsolutions << " solutions." << std::endl;
+//         std::cout << "Time used - HBOR with B3HEPV: " << hborQueryTime << " seconds" << std::endl;
+        std::cout << "Time used - HBOR  with B3HEPV: " << hborQueryTime*1000 << " milliseconds, BOA: " << boaQueryTime*1000 << " milliseconds." << std::endl;
         
         queryID++;
         
-        hepv.cleanupGraphDataVector();
+        boaQueryTimeSum += boaQueryTime;
+        hborQueryTimeSum += hborQueryTime;
     }
     
+    hepv.freeGraphDataVector();
+//     hepv.cleanupGraphDataVector();
+    printQueryTimes(hborQueryTimes, boaQueryTimes);
+    // Calculate the average times and print them
+    double hborAverageTime = hborQueryTimes.size() > 0 ? hborQueryTimeSum / hborQueryTimes.size() : 0;
+    double boaAverageTime = boaQueryTimes.size() > 0 ? boaQueryTimeSum / boaQueryTimes.size() : 0;
+    std::cout << "Average HBOR with B3HEPV query time: " << hborAverageTime*1000 << " milliseconds.\n";
+    std::cout << "Average BOA query time: " << boaAverageTime*1000 << " milliseconds.\n";
     
     
-    // Calculate statistics for HBOR method
-    double hborTotalRuntime = 0.0;
-    double hborMinTime = std::numeric_limits<double>::max();
-    double hborMaxTime = 0.0;
-    size_t hborNumQueries = hborQueryTimes.size();
-    
-    std::sort(hborQueryTimes.begin(), hborQueryTimes.end());
-    double hborMedianTime = (hborNumQueries % 2 == 0) ? (hborQueryTimes[hborNumQueries / 2 - 1] + hborQueryTimes[hborNumQueries / 2]) / 2.0 : hborQueryTimes[hborNumQueries / 2];
-    
-    for (double hborQueryTime : hborQueryTimes) {
-        hborTotalRuntime += hborQueryTime;
-        hborMinTime = std::min(hborMinTime, hborQueryTime);
-        hborMaxTime = std::max(hborMaxTime, hborQueryTime);
-    }
-    
-    double hborAvgTime = (hborNumQueries > 0) ? hborTotalRuntime / hborNumQueries : 0.0;
-    
-    // Calculate statistics for BOA method
-    double boaTotalRuntime = 0.0;
-    double boaMinTime = std::numeric_limits<double>::max();
-    double boaMaxTime = 0.0;
-    size_t boaNumQueries = boaQueryTimes.size();
-    
-    std::sort(boaQueryTimes.begin(), boaQueryTimes.end());
-    double boaMedianTime = (boaNumQueries % 2 == 0) ? (boaQueryTimes[boaNumQueries / 2 - 1] + boaQueryTimes[boaNumQueries / 2]) / 2.0 : boaQueryTimes[boaNumQueries / 2];
-    
-    for (double boaQueryTime : boaQueryTimes) {
-        boaTotalRuntime += boaQueryTime;
-        boaMinTime = std::min(boaMinTime, boaQueryTime);
-        boaMaxTime = std::max(boaMaxTime, boaQueryTime);
-    }
-    
-    double boaAvgTime = (boaNumQueries > 0) ? boaTotalRuntime / boaNumQueries : 0.0;
-    
-    // Print statistics for HBOR method
-    std::cout << "HBOR Method Statistics:" << std::endl;
-    std::cout << "Total Queries: " << hborNumQueries << std::endl;
-    std::cout << "Total Runtime: " << hborTotalRuntime << " seconds" << std::endl;
-    std::cout << "Average Time per Query: " << hborAvgTime << " seconds" << std::endl;
-    std::cout << "Min Time: " << hborMinTime << " seconds" << std::endl;
-    std::cout << "Max Time: " << hborMaxTime << " seconds" << std::endl;
-    std::cout << "Median Time: " << hborMedianTime << " seconds" << std::endl;
-    
-    // Print statistics for BOA method
-    std::cout << "\nBOA Method Statistics:" << std::endl;
-    std::cout << "Total Queries: " << boaNumQueries << std::endl;
-    std::cout << "Total Runtime: " << boaTotalRuntime << " seconds" << std::endl;
-    std::cout << "Average Time per Query: " << boaAvgTime << " seconds" << std::endl;
-    std::cout << "Min Time: " << boaMinTime << " seconds" << std::endl;
-    std::cout << "Max Time: " << boaMaxTime << " seconds" << std::endl;
-    std::cout << "Median Time: " << boaMedianTime << " seconds" << std::endl;
+
 }
 
 int main(int argc, char* argv[]) {

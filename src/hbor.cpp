@@ -57,6 +57,14 @@ void BoundaryPath::printPath() const {
     cout << endl;
 }
 
+void BoundaryPath::printLub() const {
+    cout << "LUB: ";
+    for (const int& i : lub) {
+        cout << i << ", ";
+    }
+    cout << endl;
+}
+
 bool BoundaryPath::isPreceeding(const BoundaryPath& other) const {
     if (!path.empty() && !other.path.empty()) {
         return path.back() == other.path.front();
@@ -92,24 +100,53 @@ int BoundaryPath::getNode(int i) const {
 }
 
 
-BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
-        if (isPreceeding(other)) {
-            vector<int> newLub(4);
-            vector<int> newPath;
+// BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
+//     if (isPreceeding(other)) {
+//         vector<int> newLub(4);
+//         vector<int> newPath;
 
-            // Calculate the sum of corresponding lub values
-            for (int i = 0; i < 4; ++i) {
+//         // Calculate the sum of corresponding lub values
+//         for (int i = 0; i < 4; ++i) {
+//             newLub[i] = lub[i] + other.lub[i];
+//         }
+
+//         // Append the path elements from both paths, removing duplicates
+//         newPath = path;
+//         newPath.insert(newPath.end(), other.path.begin() + 1, other.path.end());
+
+//         return BoundaryPath(newLub, newPath);
+//     }
+//     throw runtime_error("Cannot concatenate paths. The paths are not preceeding each other.");
+// }
+
+
+
+BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
+    if (isPreceeding(other)) {
+        vector<int> newLub(4);
+        vector<int> newPath;
+
+        int maxInt = std::numeric_limits<int>::max();
+
+        // Calculate the sum of corresponding lub values
+        for (int i = 0; i < 4; ++i) {
+            // Check for potential overflow
+            if (lub[i] >= maxInt || other.lub[i] >= maxInt || (lub[i] > 0 && other.lub[i] > maxInt - lub[i])) {
+                newLub[i] = maxInt; // If overflow would occur, set to max value
+            } else {
                 newLub[i] = lub[i] + other.lub[i];
             }
-
-            // Append the path elements from both paths, removing duplicates
-            newPath = path;
-            newPath.insert(newPath.end(), other.path.begin() + 1, other.path.end());
-
-            return BoundaryPath(newLub, newPath);
         }
-        throw runtime_error("Cannot concatenate paths. The paths are not preceeding each other.");
+
+        // Append the path elements from both paths, removing duplicates
+        newPath = path;
+        newPath.insert(newPath.end(), other.path.begin() + 1, other.path.end());
+
+        return BoundaryPath(newLub, newPath);
     }
+    throw runtime_error("Cannot concatenate paths. The paths are not preceeding each other.");
+}
+
 
 
 B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar) {
@@ -285,6 +322,7 @@ vector<BoundaryPath> B3HEPV::onePairBoundaryPathOf(int snode, int dnode, int sBN
     if (sBN == dBN){
         onePairPath = headPath.concatWith(tailPath);
         onePairBoundaryPathSet.push_back(onePairPath);
+        return onePairBoundaryPathSet;
 
     }
     else if (boundaryEncodedPathView.count(sBN) > 0 && boundaryEncodedPathView.at(sBN).count(dBN) > 0) {
@@ -374,8 +412,9 @@ vector<BoundaryPath> B3HEPV::paretoBoundaryPathBetween(int snode, int dnode){
         }
         
     }
+    cout<< "number of boundary paths before dominance check: " << boundaryPathSet.size() <<endl;
     paretoBoundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
-    
+    cout<< "number of boundary paths after dominance check: " << paretoBoundaryPathSet.size() <<endl;
     return paretoBoundaryPathSet;
 }
 
@@ -417,7 +456,12 @@ vector<Solution> B3HEPV::combineCostSet(vector<Solution> costSet1, vector<Soluti
 }
 
 
+
+
+
+
 vector<Solution> B3HEPV::pathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
+    numberOfCallOfBoA++;
 //     cout<<"snode"<< snode<< " "<< dnode<< " "<<fragmentId <<endl;
     vector<Solution> pathCostSet;
 //     string filename = fileFolderName+ "/fragments/fragment" + std::to_string(fragmentId) + ".txt";
@@ -454,7 +498,7 @@ int B3HEPV::boaPathRetrieval(int snode, int dnode) {
 //     cleanupGraphData(&currentGraph);
     int i = 0;
     while (solutions[i][0] > 0) {
-//         cout<< solutions[i][0] << ", " << solutions[i][1] << endl;
+//         cout<< "BOA solutions: "<< solutions[i][0] << ", " << solutions[i][1] << endl;
         nsolutions+=1;
         i++;
     }   
@@ -522,18 +566,20 @@ vector<Solution> B3HEPV::dominanceCheck(vector<Solution> superParetoCostSet){
 
 
 int B3HEPV::hbor(int snode, int dnode){
+    numberOfCallOfBoA = 0;
     vector<BoundaryPath> boundaryPathSet = B3HEPV::paretoBoundaryPathBetween(snode, dnode);
 //     for (const auto& path : boundaryPathSet) {
 //         for (int i : path.lub) {
-//             cout << i << " ";
+//             cout << "lub: " << i << " ";
 //         }
 //         cout << endl;
 //         path.printPath();
 //     }
     vector<Solution> superParetoCostSet = B3HEPV::expandPathForBoundaryPathSet(boundaryPathSet);
+    cout<< "Number of boundary edges expended: " << numberOfCallOfBoA<<endl;
     vector<Solution> solutions = B3HEPV::dominanceCheck(superParetoCostSet); 
 //     for (const Solution& solution : solutions) {
-//         std::cout << "Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
+//         std::cout << "HBOR Solutions: (" << solution.cost1 << ", " << solution.cost2 << ")" << std::endl;
 //     }
     int nsolutions = solutions.size();
     solutions.clear();
@@ -549,7 +595,7 @@ void B3HEPV::read_adjacent_table() {
     int num_arcs = 0;
 
     // Initialize graphData
-    initializeGraphDataBOA(&graphData, num_nodes, num_arcs);
+//     initializeGraphDataBOA(&graphData, num_nodes, num_arcs);
 
     // Read data from file and assign it to graphData
     readDataFromFile(&graphData, filenameEntirGraph);
@@ -563,7 +609,7 @@ void B3HEPV::read_adjacent_table() {
     for (int i =1; i<nPartitions+1; i++ ){
         GraphData subGraphData;
         string filenameSubGraph = fileFolderName+"/fragments/fragment"+std::to_string(i-1)+".txt";
-        initializeGraphDataBOA(&subGraphData, num_nodes, num_arcs);
+//         initializeGraphDataBOA(&subGraphData, num_nodes, num_arcs);
         // Read data from file and assign it to graphData
         readDataFromFile(&subGraphData, filenameSubGraph);
         graphDataVector.push_back(subGraphData);
@@ -598,6 +644,19 @@ void B3HEPV::readDataFromFile(GraphData* graphData, const std::string& filename)
     
 
     file.close();
+}
+
+void B3HEPV::cleanupGraphDataCpp(GraphData* graphData) {
+    for (int i = 0; i < graphData->numOfArcs; i++) {
+        delete[] graphData->edgeVectors[i];
+    }
+    delete[] graphData->edgeVectors;
+}
+
+void B3HEPV::freeGraphDataVector(){
+    for (GraphData currentGraph :graphDataVector){
+        cleanupGraphDataCpp(&currentGraph);
+    }
 }
 
 

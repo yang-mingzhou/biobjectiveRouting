@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     bodfs.convert_map_of_map_to_json_file();
     auto endTimeTotal = std::chrono::high_resolution_clock::now();
     auto durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
-    std::cout << "Elapsed time : " << durationTotal.count() << " milliseconds" << std::endl;
+    std::cout << "Elapsed time of encoding boundary path view : " << durationTotal.count() << " milliseconds" << std::endl;
 
     return 0;
 }

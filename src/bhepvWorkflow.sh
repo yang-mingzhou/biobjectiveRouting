@@ -8,7 +8,7 @@ gcc -O3 -std=c99 -o  bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.c
 
 
 MAP="BAY"
-NPARTITIONS="25"
+NPARTITIONS="60"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"

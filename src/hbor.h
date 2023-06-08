@@ -29,6 +29,7 @@ class BoundaryPath {
     }
     bool isDominatedBy(const BoundaryPath& other) const;
     void printPath() const;
+    void printLub() const;
     bool isPreceeding(const BoundaryPath& other) const;
     BoundaryPath concatWith(const BoundaryPath& other) const;
     BoundaryPath reverse() const {
@@ -80,6 +81,7 @@ class B3HEPV {
     std::unordered_map<int, std::unordered_map<int, BoundaryPath>> fragmentEncodedPathView;
     std::unordered_map<int, std::unordered_map<int, std::vector<int>>> adjacentLub;
     std::vector<GraphData> graphDataVector;
+    int numberOfCallOfBoA;
     // Other member variables and functions...
 
     B3HEPV(const std::string& map, int npar);
@@ -99,6 +101,8 @@ class B3HEPV {
     int boaPathRetrievalFromFile(int snode, int dnode, const std::string& filename);
     void readDataFromFile(GraphData* graphData, const std::string& filename); 
     void cleanupGraphDataVector();
+    void freeGraphDataVector();
+    void cleanupGraphDataCpp(GraphData* graphData);
 };
 
 void precomputation(const std::string & mapName);

@@ -10,15 +10,15 @@ using namespace std;
 
 
 void printQueryTimes(const std::vector<double>& hborQueryTimes, const std::vector<double>& boaQueryTimes) {
-    std::cout << "HBOR Query Times (in s):" << std::endl;
+    std::cout << "HBOR Query Times (in ms):" << std::endl;
     for (const auto& time : hborQueryTimes) {
-        std::cout << time << " ";
+        std::cout << time*1000 << " ";
     }
     std::cout << std::endl;
 
-    std::cout << "BOA Query Times (in s):" << std::endl;
+    std::cout << "BOA Query Times (in ms):" << std::endl;
     for (const auto& time : boaQueryTimes) {
-        std::cout << time << " ";
+        std::cout << time*1000 << " ";
     }
     std::cout << std::endl;
 }
@@ -90,6 +90,7 @@ void processQueries(const std::string& mapName, int nPar) {
         boaMemoryUsages.push_back(endMemory - startMemory);        
 
         std::chrono::duration<double> boaDuration = endBoa - startBoa;
+//         auto boaDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endBoa - startBoa);
         double boaQueryTime = boaDuration.count();
         boaQueryTimes.push_back(boaQueryTime);
         
@@ -104,13 +105,14 @@ void processQueries(const std::string& mapName, int nPar) {
         endMemory = getMemoryUsage();
         hborMemoryUsages.push_back(endMemory - startMemory);
         
+//         auto hborDuration = std::chrono::duration_cast<std::chrono::milliseconds>(endHbor - startHbor);
         std::chrono::duration<double> hborDuration = endHbor - startHbor;
         double hborQueryTime = hborDuration.count();
         hborQueryTimes.push_back(hborQueryTime);
         
         
         std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR: " << hborNsolutions << " solutions, BOA: " << boaNsolutions << " solutions." << std::endl;
-        std::cout << "Time used - HBOR: " << hborQueryTime << " seconds, BOA: " << boaQueryTime << " seconds." << std::endl;
+        std::cout << "Time used - HBOR: " << hborQueryTime*1000 << " milliseconds, BOA: " << boaQueryTime*1000 << " milliseconds." << std::endl;
         
         queryID++;
         
@@ -123,8 +125,8 @@ void processQueries(const std::string& mapName, int nPar) {
     // Calculate the average times and print them
     double hborAverageTime = hborQueryTimes.size() > 0 ? hborQueryTimeSum / hborQueryTimes.size() : 0;
     double boaAverageTime = boaQueryTimes.size() > 0 ? boaQueryTimeSum / boaQueryTimes.size() : 0;
-    std::cout << "Average HBOR query time: " << hborAverageTime << " seconds.\n";
-    std::cout << "Average BOA query time: " << boaAverageTime << " seconds.\n";
+    std::cout << "Average HBOR query time: " << hborAverageTime*1000 << " milliseconds.\n";
+    std::cout << "Average BOA query time: " << boaAverageTime*1000 << " milliseconds.\n";
     
     
     // Compute average memory usages
