@@ -18,6 +18,7 @@ void printEdgeVectors(const GraphData* graphData);
 void assign_global_variables(const GraphData* graphData);    
 
 unsigned (*paretoPathsInFragment(int s_node, int d_node, const GraphData* graphData))[2];
+// unsigned (*namorInFragment(int s_node, int d_node, const GraphData* graphData))[2];
 // unsigned (*paretoPathsInFragmentChar(int s_node, int d_node, const char* filename))[2];
     
 

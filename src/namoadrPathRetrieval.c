@@ -1,12 +1,14 @@
-#include "pathRetrieval.h"
+#include "namoadrPathRetrieval.h"
 #include "include.h"
-#include "boastar.h"
+#include "namoadr.h"
 #include "graph.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
+
+
 
 void initializeGraphDataBOA(GraphData* graphData, int num_nodes, int num_arcs) {
     graphData->numOfGnode = num_nodes;
@@ -77,26 +79,7 @@ void assign_global_variables(const GraphData* graphData) {
 //     printf("finished assignedc: %d\n", i);
 }
 
-unsigned (*paretoPathsInFragment(int s_node, int d_node, const GraphData* graphData))[2]{
-//     
-//     printf("Number of Nodes: %d\n", graphData->numOfGnode);
-//     printf("Number of Arcs: %d\n", graphData->numOfArcs);
-	start = s_node - 1;
-	goal = d_node - 1;
-    num_gnodes = graphData->numOfGnode;
-//     const GraphData* graphDataPtr = &graphData;
-// 	read_adjacent_table(filename);
-	assign_global_variables(graphData);
-//     printf("Finished start: %d\n", start);
-//     printf("Finished end: %d\n", goal);
-//     printEdgeVectors(graphData);
-    new_graph();
-	unsigned (*solutions)[2] = call_boastar();
-    freeMemoryForTable(num_gnodes);
-	return solutions;
-}
-
-// unsigned (*namorInFragment(int s_node, int d_node, const GraphData* graphData))[2]{
+// unsigned (*paretoPathsInFragment(int s_node, int d_node, const GraphData* graphData))[2]{
 // //     
 // //     printf("Number of Nodes: %d\n", graphData->numOfGnode);
 // //     printf("Number of Arcs: %d\n", graphData->numOfArcs);
@@ -110,10 +93,29 @@ unsigned (*paretoPathsInFragment(int s_node, int d_node, const GraphData* graphD
 // //     printf("Finished end: %d\n", goal);
 // //     printEdgeVectors(graphData);
 //     new_graph();
-// 	unsigned (*solutions)[2] = call_namoadr();
+// 	unsigned (*solutions)[2] = call_boastar();
 //     freeMemoryForTable(num_gnodes);
 // 	return solutions;
 // }
+
+unsigned (*namorInFragment(int s_node, int d_node, const GraphData* graphData))[2]{
+//     
+//     printf("Number of Nodes: %d\n", graphData->numOfGnode);
+//     printf("Number of Arcs: %d\n", graphData->numOfArcs);
+	start = s_node - 1;
+	goal = d_node - 1;
+    num_gnodes = graphData->numOfGnode;
+//     const GraphData* graphDataPtr = &graphData;
+// 	read_adjacent_table(filename);
+	assign_global_variables(graphData);
+//     printf("Finished start: %d\n", start);
+//     printf("Finished end: %d\n", goal);
+//     printEdgeVectors(graphData);
+    new_graph();
+	unsigned (*solutions)[2] = call_namoadr();
+    freeMemoryForTable(num_gnodes);
+	return solutions;
+}
 
 
 // unsigned (*paretoPathsInFragmentChar(int s_node, int d_node, const char* filename))[2] {
