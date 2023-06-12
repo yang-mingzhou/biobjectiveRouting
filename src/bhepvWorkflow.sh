@@ -2,13 +2,13 @@
 module load gcc/11.3.0
 # Compile CPP files
 gcc -O3 -std=c++11 -o kahip.o kahip.cpp  -lstdc++
-# -g -fsanitize=address
+# # -g -fsanitize=address
 gcc -O3 -std=c99 -o bhepvPrecomputation.o bhepvPrecomputation.cpp bhepv.cpp bodPathRetrieval.c heap.c bod.c graph.c -lm -lstdc++
-gcc -O3 -std=c99 -o  bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
-
+gcc -O3 -std=c99 -o bhepvPathRetrieval.o bhepvPathRetrieval.cpp hborWithBhepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
+gcc -O3 -std=c99 -o namoadrPathRetrievalWorkFlow.o namoadrPathRetrievalWorkFlow.cpp bhepvForNamoadr.cpp namoadrPathRetrieval.c heap.c namoadr.c graph.c -lm -lstdc++
 
 MAP="BAY"
-NPARTITIONS="60"
+NPARTITIONS="50"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"
@@ -22,3 +22,4 @@ echo "NPARTITIONS=$NPARTITIONS"
 # Execute final processing
 ./bhepvPathRetrieval.o ${MAP} ${NPARTITIONS}
 
+./namoadrPathRetrievalWorkFlow.o ${MAP} ${NPARTITIONS}

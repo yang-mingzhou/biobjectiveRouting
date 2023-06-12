@@ -11,11 +11,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 gnode* graph_node;
 unsigned num_gnodes;
-unsigned adjacent_table[MAXNODES][MAXNEIGH];
-unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned adjacent_table[MAXNODES][MAXNEIGH];
+// unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 unsigned goal, start;
 gnode* start_state;
 gnode* goal_state;
@@ -34,10 +35,61 @@ unsigned nsolutions = 0;
 unsigned stat_pruned = 0;
 unsigned stat_created = 0;
 
+unsigned **adjacent_table;
+unsigned **pred_adjacent_table;
+
+void allocateMemoryForTable(unsigned num_gnodes, unsigned num_arcs) {
+    double ratio = (double)num_arcs / num_gnodes ;
+    unsigned numNeighbors = (unsigned) round(ratio);
+    if (numNeighbors<10){
+        numNeighbors = 45;
+    }
+    else {
+        numNeighbors = 2000*numNeighbors;
+    }
+
+    adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    pred_adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    if(adjacent_table == NULL || pred_adjacent_table == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    for (unsigned i = 0; i < num_gnodes; ++i) {
+        adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        pred_adjacent_table[i] = malloc(numNeighbors * sizeof(unsigned));
+        if(adjacent_table[i] == NULL || pred_adjacent_table[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
+    }
+}
+
+void freeMemoryForTable(unsigned numNodes) {
+    for (unsigned i = 0; i < numNodes; ++i) {
+        free(adjacent_table[i]);
+        free(pred_adjacent_table[i]);
+    }
+    free(adjacent_table);
+    free(pred_adjacent_table);
+}
+
 void initialize_parameters() {
     start_state = &graph_node[start];
     goal_state = &graph_node[goal];
     stat_percolations = 0;
+    
+    for (int i = 0; i < num_gnodes; ++i){
+        graph_node[i].gmin = LARGE;
+        graph_node[i].heapindex = 0;
+    }
+    int i, j;
+    for (i = 0; i < nsolutions; i++) {
+        for (j = 0; j < 2; j++) {
+            solutions[i][j]=0;
+        }
+    }
+    minf_solution = LARGE;
 }
 
 int backward_dijkstra(int dim) {
@@ -45,6 +97,7 @@ int backward_dijkstra(int dim) {
         graph_node[i].key = LARGE;
     emptyheap_dij();
     goal_state->key = 0;
+    goal_state->heapindex = 0;
     insertheap_dij(goal_state);
 
     while (topheap_dij() != NULL) {
@@ -69,20 +122,62 @@ int backward_dijkstra(int dim) {
     return 1;
 }
 
-snode* new_node() {
-	snode* state;
+
+
+// snode* new_node() {
+// 	snode* state;
 	
-	if (next_recycled > 0) { //to reuse pruned nodes in memory
-		state = recycled_nodes[--next_recycled];
-     }
-     else{
-		state = (snode*)malloc(sizeof(snode));
-        ++stat_created;
+// 	if (next_recycled > 0) { //to reuse pruned nodes in memory
+// 		state = recycled_nodes[--next_recycled];
+//      }
+//      else{
+// 		state = (snode*)malloc(sizeof(snode));
+//         ++stat_created;
+//     }
+//     state->heapindex = 0;
+//     state->gopnext = NULL;
+//     state->gopprev = NULL;
+//     return state;
+// }
+
+snode* new_node() {
+    snode* state = (snode*)malloc(sizeof(snode));
+    if(state == NULL) { // check if malloc succeeded
+        printf("Error: Memory allocation failed in new_node().\n");
+        exit(EXIT_FAILURE);
     }
     state->heapindex = 0;
     state->gopnext = NULL;
     state->gopprev = NULL;
     return state;
+}
+
+void free_node(snode* node) {
+    if(node != NULL) { // always good to check if the pointer is not NULL
+        free(node);
+        node = NULL; // good practice to set freed pointer to NULL
+    }
+}
+
+// void free_node(snode* node) {
+//     if (node != NULL) {
+//         // Ensure that you don't go over the limit of the recycled_nodes array
+//         if (next_recycled < MAX_RECYCLE) {
+//             recycled_nodes[next_recycled++] = node;
+//         } else {
+//             // Handle the case when recycled_nodes is full
+//             // For example, you can directly free the node
+//             free(node);
+//         }
+//     }
+// }
+
+void free_all_nodes() {
+    for (int i = 0; i < next_recycled; i++) {
+        free(recycled_nodes[i]);
+        recycled_nodes[i] = NULL; // Null out the pointer
+    }
+    next_recycled = 0;
 }
 
 
@@ -189,9 +284,10 @@ int namoadr() {
 		
         if (n->g2 + graph_node[n->state].h2 >= minf_solution) {
             stat_pruned++;
-            if (next_recycled < MAX_RECYCLE) {
-                recycled_nodes[next_recycled++] = n;
-            }
+//             if (next_recycled < MAX_RECYCLE) {
+//                 recycled_nodes[next_recycled++] = n;
+//             }
+            free_node(n);
             continue;
         }
 
@@ -208,6 +304,7 @@ int namoadr() {
             }
             if (minf_solution > n->g2)
                 minf_solution = n->g2;
+            free_node(n);
             continue;
         }
 
@@ -243,13 +340,17 @@ int namoadr() {
             succ->key = newkey;
             UpdateOpen(succ);
         }
+        if (next_recycled < MAX_RECYCLE) {
+            recycled_nodes[next_recycled++] = n;
+        }
     }
-
+    free_all_nodes();
     return nsolutions > 0;
 }
 
 /* ------------------------------------------------------------------------------*/
-void call_namoadr() {
+unsigned (*call_namoadr())[2] {
+// void call_namoadr() {
     float runtime;
     struct timeval tstart, tend;
     unsigned long long min_cost;
@@ -269,16 +370,22 @@ void call_namoadr() {
     //NAMOA*dr
     namoadr();
 
+//     int freeCnt;
+//     for(freeCnt=0;freeCnt < next_recycled;++freeCnt ){
+//         free_node(recycled_nodes[freeCnt]);
+//     }
+//     next_recycled = 0;
     gettimeofday(&tend, NULL);
     runtime = 1.0 * (tend.tv_sec - tstart.tv_sec) + 1.0 * (tend.tv_usec - tstart.tv_usec) / 1000000.0;
     //		printf("nsolutions:%d Runtime(ms):%f Generated: %llu statexpanded1:%llu\n", nsolutions, time_astar_first1*1000, stat_generated, stat_expansions);
-    printf("%lld;%lld;%d;%f;%llu;%llu;%u;%llu\n",
-        start_state->id + 1,
-        goal_state->id + 1,
-        nsolutions,
-        runtime * 1000,
-        stat_generated,
-        stat_expansions,
-        stat_created,
-        stat_gopoperations);
+//     printf("%lld;%lld;%d;%f;%llu;%llu;%u;%llu\n",
+//         start_state->id + 1,
+//         goal_state->id + 1,
+//         nsolutions,
+//         runtime * 1000,
+//         stat_generated,
+//         stat_expansions,
+//         stat_created,
+//         stat_gopoperations);
+    return solutions;
 }

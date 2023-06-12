@@ -1,5 +1,5 @@
-#ifndef BHEPV_H
-#define BHEPV_H
+#ifndef BHEPVNAMOADR_H
+#define BHEPVNAMOADR_H
 
 #include <vector>
 #include <queue>
@@ -15,9 +15,7 @@
 #include <unordered_set>
 #include <iomanip>
 #include "json.hpp"
-#include "pathRetrieval.h"
 #include "namoadrPathRetrieval.h"
-#include "boastar.h"
 
 class BiobjectivePath {
 public:
@@ -48,12 +46,12 @@ public:
     HBORBasic(const std::string& map, int npar);
 
     void load();
-    int hbor(int snode, int dnode);
-    int boa(int snode, int dnode);
-//     int namor(int snode, int dnode);
+//     int hbor(int snode, int dnode);
+//     int boa(int snode, int dnode);
+    int namor(int snode, int dnode);
     void freeGraphDataVector();
 
-private:
+public:
     std::string mapName;
     int nPartitions;
     std::string fileFolderName;
@@ -75,10 +73,9 @@ private:
     std::vector<BiobjectivePath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN);
     std::vector<BiobjectivePath> generateCombinations(const std::vector<BiobjectivePath>& vec1, const std::vector<BiobjectivePath>& vec2, const std::vector<BiobjectivePath>& vec3);
     std::vector<BiobjectivePath> dominanceCheck(std::vector<BiobjectivePath> superParetoCostSet);
-    std::vector<BiobjectivePath> boaPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
     void readGraphDataFromFile(GraphData* graphData, const std::string& filename);
     void cleanupGraphDataCpp(GraphData* graphData);
-//     std::vector<BiobjectivePath> namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
+    std::vector<BiobjectivePath> namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
 };
 
 

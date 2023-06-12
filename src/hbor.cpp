@@ -205,6 +205,7 @@ B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar
     } catch (json::parse_error& e) {
         cerr << "Failed to parse the JSON file: " << e.what() << endl;
     }
+    int cnt_BoundaryPath = 0;
     // Access the JSON data and populate the data structure
     if (jsonData.is_object()) {
         for (const auto& entry1 : jsonData.items()) {
@@ -219,8 +220,11 @@ B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar
                         for (const auto& arrayValue : entry2.value()) {
                             if (arrayValue.is_array()) {
                                 BoundaryPath path;
+                                cnt_BoundaryPath ++;
                                 for (size_t i = 0; i < arrayValue.size(); i++) {
+                                    
                                     if (arrayValue[i].is_number()) {
+                                        
                                         if (i < 4) {
                                             path.lub.push_back(arrayValue[i]);
                                         } else {
@@ -237,6 +241,8 @@ B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar
             }
         }
     }
+    cout<< "Number of boundary paths: " << cnt_BoundaryPath << endl;
+    int cnt_fragmentPath = 0;
     //revise to ".txt" file
     // read fragment encoded path view
     string fragmentEncodedPathFileName =  fileFolderName + "/fragmentEncodedPathView.txt";
@@ -249,7 +255,7 @@ B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar
         std::istringstream iss(lineInfragment);
         int startNode, endNode, cost1, cost2, cost3, cost4;
         if (iss >> startNode >> endNode >> cost1 >> cost2 >> cost3 >> cost4) {
-
+            cnt_fragmentPath ++;
             BoundaryPath path;
             path.path = {startNode, endNode};
             path.lub = {cost1, cost2, cost3, cost4};
@@ -257,7 +263,7 @@ B3HEPV::B3HEPV(const std::string& map, int npar) : mapName(map),nPartitions(npar
         } 
     }
     fragementFile.close();
-
+    cout<< "Number of fragment paths: " << cnt_fragmentPath << endl;
     // read adjacentLub.json {snode:node:[lb1, lb2, ub1, ub2]}
     string adjacentFilename =  fileFolderName + "/adjacent_LUB.json";
     ifstream adjfile(adjacentFilename);
@@ -504,6 +510,12 @@ int B3HEPV::boaPathRetrieval(int snode, int dnode) {
     }   
     return nsolutions;
 }
+
+
+
+
+
+
 
 vector<Solution> B3HEPV::expandPathForBoundaryPathSet(vector<BoundaryPath> boundaryPathSet){
     vector<Solution> expendedPathCostSet;

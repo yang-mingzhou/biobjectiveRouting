@@ -1,4 +1,4 @@
-#include "hborWithBhepv.hpp"
+#include "bhepvForNamoadr.hpp"
 
 #include <string>
 #include <sstream>
@@ -22,17 +22,15 @@ void HBORBasic::loadEncodedPathView() {
 
     // Clear existing data
     fragmentEncodedPathView.clear();
-    int cnt_FragmentPath = 0;
+
     // Populate boundaryEncodedPathView from json
     for (json::iterator it = j_fepv.begin(); it != j_fepv.end(); ++it) {
         int outerKey = std::stoi(it.key());
         for (json::iterator inner_it = it.value().begin(); inner_it != it.value().end(); ++inner_it) {
             int innerKey = std::stoi(inner_it.key());
             fragmentEncodedPathView[outerKey][innerKey] = inner_it.value().get<std::vector<std::vector<int>>>();
-            cnt_FragmentPath++;
         }
     }
-    cout<< "Number of encoded fragment paths: " << cnt_FragmentPath << endl;
     
     std::string fileNameBoundaryEPV = fileFolderName + "/boundaryEPV.json";
     std::ifstream i_bepv(fileNameBoundaryEPV);
@@ -41,18 +39,16 @@ void HBORBasic::loadEncodedPathView() {
 
     // Clear existing data
     boundaryEncodedPathView.clear();
-    
-    int cnt_BoundaryPath = 0;
+
     // Populate boundaryEncodedPathView from json
     for (json::iterator it = j_bepv.begin(); it != j_bepv.end(); ++it) {
         int outerKey = std::stoi(it.key());
         for (json::iterator inner_it = it.value().begin(); inner_it != it.value().end(); ++inner_it) {
-            cnt_BoundaryPath ++;
             int innerKey = std::stoi(inner_it.key());
             boundaryEncodedPathView[outerKey][innerKey] = inner_it.value().get<std::vector<std::vector<int>>>();
         }
     }
-    cout<< "Number of encoded bundary paths: " << cnt_BoundaryPath << endl;
+    
     
     
 }
@@ -176,29 +172,7 @@ void HBORBasic::readOriginGraph(){
 
 
 
-vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
-    vector<BiobjectivePath> pathCostSet;
-    int snodeInFragment = snode;
-    int dnodeInFragment = dnode;
-    if (fragmentId!=-1){ //using fragment graphs
-        snodeInFragment = fragmentIndex[snode-1][1];
-        dnodeInFragment = fragmentIndex[dnode-1][1];
-    }
-    // cout<< "snodeInFragment: "<<snodeInFragment<<dnodeInFragment<<endl;
-    const GraphData currentGraph = graphDataVector[fragmentId+1];
-    const GraphData* graphDataPtr = &currentGraph;
-    unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
-    int i = 0;
-    while (solutions[i][0] > 0) {
-        BiobjectivePath currentSol(solutions[i][0], solutions[i][1]);
-        pathCostSet.push_back(currentSol);
-        i++;
-    } 
-    cout<<pathCostSet.size()<<endl;
-    return pathCostSet;
-}
-
-// vector<BiobjectivePath> HBORBasic::namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
+// vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
 //     vector<BiobjectivePath> pathCostSet;
 //     int snodeInFragment = snode;
 //     int dnodeInFragment = dnode;
@@ -209,7 +183,7 @@ vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int
 //     // cout<< "snodeInFragment: "<<snodeInFragment<<dnodeInFragment<<endl;
 //     const GraphData currentGraph = graphDataVector[fragmentId+1];
 //     const GraphData* graphDataPtr = &currentGraph;
-//     unsigned (*solutions)[2] = namorInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
+//     unsigned (*solutions)[2] = paretoPathsInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
 //     int i = 0;
 //     while (solutions[i][0] > 0) {
 //         BiobjectivePath currentSol(solutions[i][0], solutions[i][1]);
@@ -219,6 +193,28 @@ vector<BiobjectivePath> HBORBasic::boaPathRetrievalWithInFragment(int snode, int
 //     cout<<pathCostSet.size()<<endl;
 //     return pathCostSet;
 // }
+
+vector<BiobjectivePath> HBORBasic::namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId) {
+    vector<BiobjectivePath> pathCostSet;
+    int snodeInFragment = snode;
+    int dnodeInFragment = dnode;
+    if (fragmentId!=-1){ //using fragment graphs
+        snodeInFragment = fragmentIndex[snode-1][1];
+        dnodeInFragment = fragmentIndex[dnode-1][1];
+    }
+    // cout<< "snodeInFragment: "<<snodeInFragment<<dnodeInFragment<<endl;
+    const GraphData currentGraph = graphDataVector[fragmentId+1];
+    const GraphData* graphDataPtr = &currentGraph;
+    unsigned (*solutions)[2] = namorInFragment(snodeInFragment, dnodeInFragment, graphDataPtr);
+    int i = 0;
+    while (solutions[i][0] > 0) {
+        BiobjectivePath currentSol(solutions[i][0], solutions[i][1]);
+        pathCostSet.push_back(currentSol);
+        i++;
+    } 
+    cout<<pathCostSet.size()<<endl;
+    return pathCostSet;
+}
 
 
 
@@ -384,64 +380,51 @@ void HBORBasic::load(){
 
 
 
-int HBORBasic::hbor(int snode, int dnode){
-    cout<< "snodednode" << snode << dnode <<endl;
-    vector<BiobjectivePath> solutionSet;
-    int sBN, dBN;
-
-    cout<< fragmentIndex.size() <<endl;
-    
-    int sfragment = fragmentIndex[snode-1][0];
-    int dfragment = fragmentIndex[dnode-1][0];
-    
-    cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
-    
-    vector<int> sBoundaryNode = boundaryNodeSet[sfragment];
-    vector<int> dBoundaryNode = boundaryNodeSet[dfragment];
-    
-    if (sfragment==dfragment){
-        vector<BiobjectivePath> infragmentCostSet = boaPathRetrievalWithInFragment(snode, dnode, sfragment);
-        solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
-    }
-    
-    for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
-        
-        sBN = sBoundaryNode[i];
-        for (size_t j = 0; j < dBoundaryNode.size(); ++j){
-            dBN = dBoundaryNode[j];
-//             cout<< "sBN" << sBN << dBN <<endl;
-            vector<BiobjectivePath> onePairBoundaryPathSet = onePairBoundaryPathOf(snode, dnode, sBN, dBN); 
-            solutionSet.insert(solutionSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
-            
-        }
-    }
-
-    
-    cout<< "boundary path size: " <<solutionSet.size() <<endl;
-    
-    vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
-//     for (size_t j = 0; j < paretoSet.size(); ++j){
-//         cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;
-//     }
-
-    return paretoSet.size();
-    
-}
-
-int HBORBasic::boa(int snode, int dnode){
-    cout<< "snodednode" << snode << dnode <<endl;
-    vector<BiobjectivePath> solutionSet = boaPathRetrievalWithInFragment(snode, dnode, -1);
-//     for (size_t j = 0; j < solutionSet.size(); ++j){
-//         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
-//     }
-
-    return solutionSet.size();
-    
-}
-
-// int HBORBasic::namor(int snode, int dnode){
+// int HBORBasic::hbor(int snode, int dnode){
 //     cout<< "snodednode" << snode << dnode <<endl;
-//     vector<BiobjectivePath> solutionSet = namorPathRetrievalWithInFragment(snode, dnode, -1);
+//     vector<BiobjectivePath> solutionSet;
+//     int sBN, dBN;
+    
+//     int sfragment = fragmentIndex[snode-1][0];
+//     int dfragment = fragmentIndex[dnode-1][0];
+    
+//     cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
+    
+//     vector<int> sBoundaryNode = boundaryNodeSet[sfragment];
+//     vector<int> dBoundaryNode = boundaryNodeSet[dfragment];
+    
+//     if (sfragment==dfragment){
+//         vector<BiobjectivePath> infragmentCostSet = boaPathRetrievalWithInFragment(snode, dnode, sfragment);
+//         solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
+//     }
+    
+//     for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
+        
+//         sBN = sBoundaryNode[i];
+//         for (size_t j = 0; j < dBoundaryNode.size(); ++j){
+//             dBN = dBoundaryNode[j];
+// //             cout<< "sBN" << sBN << dBN <<endl;
+//             vector<BiobjectivePath> onePairBoundaryPathSet = onePairBoundaryPathOf(snode, dnode, sBN, dBN); 
+//             solutionSet.insert(solutionSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
+            
+//         }
+//     }
+
+    
+//     cout<< "boundary path size: " <<solutionSet.size() <<endl;
+    
+//     vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
+// //     for (size_t j = 0; j < paretoSet.size(); ++j){
+// //         cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;
+// //     }
+
+//     return paretoSet.size();
+    
+// }
+
+// int HBORBasic::boa(int snode, int dnode){
+//     cout<< "snodednode" << snode << dnode <<endl;
+//     vector<BiobjectivePath> solutionSet = boaPathRetrievalWithInFragment(snode, dnode, -1);
 // //     for (size_t j = 0; j < solutionSet.size(); ++j){
 // //         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
 // //     }
@@ -449,6 +432,17 @@ int HBORBasic::boa(int snode, int dnode){
 //     return solutionSet.size();
     
 // }
+
+int HBORBasic::namor(int snode, int dnode){
+    cout<< "snodednode" << snode << dnode <<endl;
+    vector<BiobjectivePath> solutionSet = namorPathRetrievalWithInFragment(snode, dnode, -1);
+//     for (size_t j = 0; j < solutionSet.size(); ++j){
+//         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
+//     }
+
+    return solutionSet.size();
+    
+}
 
 
 void HBORBasic::cleanupGraphDataCpp(GraphData* graphData) {
