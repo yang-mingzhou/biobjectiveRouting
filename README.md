@@ -12,19 +12,8 @@ heavy-duty truck data show that the proposed method can greatly improve the accu
 
 ## [Requirements](https://github.com/yang-mingzhou/biobjectiveRouting):
 ```
-bintrees==2.2.0
-geopandas==0.10.2
-networkx==2.6.3
-numpy==1.21.3
-osmnx==0.16.1
-pandas==1.2.4
-plotly==5.3.1
-psycopg2==2.9.1
-Shapely==1.8.0
-torch==1.11.0
-torch_geometric==2.0.4
-torchvision==0.12.0
-tqdm==4.59.0
+GCC 11
+C99
 ```
 ## Files:
 1. [bhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.cpp): (Need to update)
@@ -92,18 +81,10 @@ tqdm==4.59.0
 3. Folder [b3hepv](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/b3hepv): (need to update)
 4. Folder [dfs_100_pair](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/dfs_100_pair): (need to update)
 5. Folder [src](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/src): (need to update)
-6. Folder [src_cpp](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/src_cpp): (need to update)
 
    
-   
-## Datasets
-We are not allowed to publish the on-board diagnostics (OBD) dataset described in the paper. 
-In future works, we plan to generate some synthetic vehicle travel datasets using vehicle powertrain simulators 
-(e.g., [FastSim](https://www.nrel.gov/transportation/fastsim.html#:~:text=The%20Future%20Automotive%20Systems%20Technology,%2C%20cost%2C%20and%20battery%20life.)).
-We will publish the code for generating the synthetic datasets and the corresponding datasets in the future.
-
 Change Log
 -----
 
-### 6th Oct. 2022
+### 13th June. 2023
 Version 1.0: Initial Commit.
