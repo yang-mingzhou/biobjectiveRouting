@@ -1,14 +1,31 @@
-# Bi-objective Routing
+# A Hierarchical Algorithm for High Throughput Bi-Objective Routing: A Summary of Results
 
 ## Abstract:
 
-The eco-toll estimation problem quantifies the expected environmental cost (e.g., energy consumption, exhaust emissions) for a vehicle to travel along a path. This problem
-is important for societal applications such as eco-routing, which aims to find paths with the lowest exhaust emission or energy need. The challenges of this problem are threefold: 
-(1) the dependence of a vehicle’s eco-toll on its physical parameters; (2) the lack of access to data with eco-toll
-information; and (3) the influence of contextual information (i.e. the connections of adjacent segments in the path) on the eco-toll of road segments. 
-Prior work on eco-toll estimation has mostly relied on pure data-driven approaches and has high estimation errors given the limited training data. 
-To address these limitations, we propose a novel Eco-toll estimation Physics-informed Neural Network framework (Eco-PiNN) using three novel ideas, namely, (1) a physics-informed decoder that integrates the physical laws of the vehicle engine into the network, (2) an attention-based contextual information encoder, and (3) a physics-informed regularization to reduce overfitting. Experiments on real-world
-heavy-duty truck data show that the proposed method can greatly improve the accuracy of eco-toll estimation compared with state-of-the-art methods
+Given an origin, a destination, and a network graph in which each
+directed edge is associated with a pair of non-negative costs, the bi-
+objective routing problem aims to find the Pareto-optimal path set
+between the origin and the destination. This problem has societal
+applications, such as addressing electric vehicle range anxiety by
+minimizing travel time and vehicle energy consumption in location-
+based services. The problem is challenging due to the tension be-
+tween the necessity for high throughput (i.e. the ability to process
+a large number of queries quickly) and the extensive number of
+Pareto-optimal paths, rendering all-pair precomputation methods
+infeasible. Prior work on bi-objective routing has mostly relied on
+purely compute-on-demand approaches and is not efficient enough
+for high throughput routing queries, or can only generate subset
+approximations of the Pareto-optimal set. To address these limi-
+tations, we propose a Hierarchical Bi-objective Routing (HBOR)
+algorithm, which contains a Bi-objective Hierarchical Encoded Path
+View (BHEPV) model that strikes a balance between the compute-
+on-demand approaches and precomputation approaches. We also
+propose a Bounds-based BHEPV (B3HEPV) to refine HBOR. Our
+theoretical evaluation proves the Pareto-optimality of the path sets
+retrieved from the proposed methods, and the computational ex-
+periments using San Francisco Bay Area road network data show
+that the proposed methods can run an order of magnitude faster
+than state-of-the-art methods in terms of online runtime.
 
 ## [Requirements](https://github.com/yang-mingzhou/biobjectiveRouting):
 ```
