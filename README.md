@@ -32,67 +32,70 @@ than state-of-the-art methods in terms of online runtime.
 GCC 11
 C99
 ```
+## Example Execution: 
+```
+## HBOR for the "test" network
+mkdir -p bhepv/test
+cd src
+chmod +x bhepvWorkflow.sh
+./bhepvWorkflow.sh
+```
+
 ## Files:
-1. [bhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.cpp): (Need to update)
-2. [bhepv.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.h): training and testing of EcoPiNN.
-3. [bhepv.hpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.hpp): (Need to update)
+1. [bhepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvWorkflow.sh): Workflow script for HBOR
+2. [b3hepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/b3hepvWorkflow.sh): Workflow script for HBOR-B
+3. [bhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.cpp): (Need to update)
 4. [bhepvPathRetrieval.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvPathRetrieval.cpp): (Need to update)
 5. [bhepvPrecomputation.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvPrecomputation.cpp): (Need to update)
-6. [bhepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvWorkflow.sh): (Need to update)
-7. [biobjectiveGraph.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/biobjectiveGraph.cpp): (Need to update)
-8. [biobjectiveGraph.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/biobjectiveGraph.h): (Need to update)
-9. [boastar.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/boastar.c): (Need to update)
-10. [boastar.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/boastar.h): (Need to update)
-11. [bod.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bod.c): (Need to update)
-12. [bod.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bod.h): (Need to update)
-13. [bodPathRetrieval.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bodPathRetrieval.c): (Need to update)
-14. [bodPathRetrieval.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bodPathRetrieval.h): (Need to update)
-15. [dfs_class.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/dfs_class.h): DFS for specific source and destination node
-16. [dfs_class_v2.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/dfs_class_v2.h): DFS specifying only source node
-17. [fragmentPathRetrieval.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/fragmentPathRetrieval.cpp): (Need to update)
-18. [graph.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph.c): (Need to update)
-19. [graph.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph.h): (Need to update)
-20. [graph_data.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph_data.h): (Need to update)
-21. [hbor.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hbor.cpp): (Need to update)
-22. [hbor.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hbor.h): (Need to update)
-23. [hborWithBhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hborWithBhepv.cpp): (Need to update)
-24. [hborWithBhepv.hpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hborWithBhepv.hpp): (Need to update)
-25. [heap.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/heap.c): (Need to update)
-26. [heap.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/heap.h): (Need to update)
-27. [include.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/include.h): (Need to update)
-28. [json.hpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/json.hpp): (Need to update)
-29. [kahip.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/kahip.cpp): (Need to update)
-30. [m.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/m.cpp): main file to run DFS 
-31. [main_boa.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/main_boa.c): (Need to update)
-32. [main_bod.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/main_bod.c): (Need to update)
+6. [biobjectiveGraph.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/biobjectiveGraph.cpp): (Need to update)
+7. [biobjectiveGraph.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/biobjectiveGraph.h): (Need to update)
+8. [dfs_class_v2.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/dfs_class_v2.h): DFS specifying only source node
+9. [fragmentPathRetrieval.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/fragmentPathRetrieval.cpp): (Need to update)
+10. [hbor.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hbor.cpp): (Need to update)
+11. [hbor.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hbor.h): (Need to update)
+12. [hborWithBhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hborWithBhepv.cpp): (Need to update)
+13. [hborWithBhepv.hpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/hborWithBhepv.hpp): (Need to update)
+14. [json.hpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/json.hpp): (Need to update)
+15. [kahip.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/kahip.cpp): (Need to update)
+16. [m.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/m.cpp): main file to run DFS 
+17. [onlineRouting.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/onlineRouting.cpp): (Need to update)
+18. [pairs.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pairs.cpp): Generating queries; we use 12 as a random seed in the project.
+19. [precomputation.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/precomputation.cpp): (Need to update)
+
+### Test cases:
+
+20. [test.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/test.cpp): (Need to update)
+
+### Following files are built upon code repository [BOAstar](https://github.com/jorgebaier/BOAstar/)   after fixing some memory leak issues:
+
+21. [boastar.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/boastar.c): (Need to update)
+22. [boastar.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/boastar.h): (Need to update)
+23. [bod.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bod.c): (Need to update)
+24. [bod.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bod.h): (Need to update)
+25. [bodPathRetrieval.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bodPathRetrieval.c): (Need to update)
+26. [bodPathRetrieval.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bodPathRetrieval.h): (Need to update)
+27. [pathRetrieval.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pathRetrieval.c): (Need to update)
+28. [pathRetrieval.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pathRetrieval.h): (Need to update)
+29. [main_boa.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/main_boa.c): (Need to update)
+30. [main_bod.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/main_bod.c): (Need to update)
+31. [include.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/include.h): (Need to update)
+32. [node_namoa.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/node_namoa.h): (Need to update)
 33. [main_namoadr.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/main_namoadr.c): (Need to update)
 34. [namoadr.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/namoadr.c): (Need to update)
 35. [namoadr.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/namoadr.h): (Need to update)
 36. [node.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/node.h): (Need to update)
-37. [node_namoa.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/node_namoa.h): (Need to update)
-38. [onePairQuery.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/onePairQuery.cpp): (Need to update)
-39. [onlinePathRetrievalWorkFlow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/onlinePathRetrievalWorkFlow.sh): (Need to update)
-40. [onlineRouting.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/onlineRouting.cpp): (Need to update)
-41. [pairs.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pairs.cpp): (Need to update)
-42. [pathRetrieval.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pathRetrieval.c): (Need to update)
-43. [pathRetrieval.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/pathRetrieval.h): (Need to update)
-44. [precomputation.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/precomputation.cpp): (Need to update)
-45. [precomputationWorkFlow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/precomputationWorkFlow.sh): (Need to update)
-46. [syntheticGraph.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/syntheticGraph.sh): (Need to update)
-47. [test.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/test.cpp): (Need to update)
-48. [testVector.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/testVector.c): (Need to update)
-49. [testbhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/testbhepv.cpp): (Need to update)
-50. [testbhepv.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/testbhepv.sh): (Need to update)
-51. [testbhepvHbor.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/testbhepvHbor.cpp): (Need to update)
-52. [vector.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/vector.c): (Need to update)
-53. [vector.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/vector.h): (Need to update)
+37. [heap.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/heap.c): (Need to update)
+38. [heap.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/heap.h): (Need to update)
+39. [graph.c](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph.c): (Need to update)
+40. [graph.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph.h): (Need to update)
+41. [graph_data.h](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/graph_data.h): (Need to update)
 
 
 ## File Folders:
 
-1. Folder [Maps](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/Maps): (need to update)
-2. Folder [Queries](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/Queries) contains the pretrained NODE2VEC model(detailed in Sec 3.1 of the paper).
-3. Folder [src](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/src): (need to update)
+1. Folder [Maps](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/Maps)
+2. Folder [Queries](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/Queries)
+3. Folder [src](https://github.com/yang-mingzhou/biobjectiveRouting/tree/main/src)
 
 ## Acknowledgements
 
