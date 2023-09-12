@@ -41,7 +41,7 @@ mkdir -p b3hepv/test
 cd src
 
 ## HBOR for the "test" network with 2 partitions
-make run_B3HBOR MAP=test NPARTITIONS=2
+make run_HBOR MAP=test NPARTITIONS=2
 
 ## HBOR-B for the "test" network with 3 partitions
 make run_B3HBOR MAP=test NPARTITIONS=3
