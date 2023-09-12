@@ -21,5 +21,4 @@ echo "NPARTITIONS=$NPARTITIONS"
 
 # Execute final processing
 ./bhepvPathRetrieval.o ${MAP} ${NPARTITIONS}
-
 ./namoadrPathRetrievalWorkFlow.o ${MAP} ${NPARTITIONS}

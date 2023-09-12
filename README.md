@@ -34,14 +34,20 @@ C99
 ```
 ## Example Execution: 
 ```
-## HBOR for the "test" network
+## Directories for saving encoded path view of the "test" network
 mkdir -p bhepv/test
+mkdir -p b3hepv/test
 cd src
-chmod +x bhepvWorkflow.sh
-./bhepvWorkflow.sh
+## HBOR for the "test" network with 2 partitions
+make run_B3HBOR MAP=test NPARTITIONS=2
+## HBOR-B for the "test" network with 3 partitions
+make run_B3HBOR MAP=test NPARTITIONS=3
+## clean object files
+make clean
 ```
 
 ## Files:
+0. [Makefile](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/makefile): Makefile for the both HBOR and HBOR-B
 1. [bhepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvWorkflow.sh): Workflow script for HBOR
 2. [b3hepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/b3hepvWorkflow.sh): Workflow script for HBOR-B
 3. [bhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.cpp): 

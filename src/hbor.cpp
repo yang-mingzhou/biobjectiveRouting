@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <string>
 #include <climits>
+#include <chrono>
 #include "hbor.h"
 #include "json.hpp"
 #include "biobjectiveGraph.h"

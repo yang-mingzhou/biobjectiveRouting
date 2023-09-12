@@ -6,15 +6,14 @@ gcc -O3 -std=c99 -o precomputation.o precomputation.cpp hbor.cpp biobjectiveGrap
 gcc -O3 -std=c++11 -o encodeBhepv.o m.cpp -lm -lstdc++
 gcc -O3 -std=c99 -o online.o onlineRouting.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
 
-MAP="BAY10"
-NPARTITIONS="50"
+MAP="test"
+NPARTITIONS="3"
 
 echo "MAP=$MAP"
 echo "NPARTITIONS=$NPARTITIONS"
 
 # Execute intermediate processing
 ./kahip.o ../Maps/${MAP}-road-d.txt ../b3hepv/${MAP}/kahip.graph
-
 ../../kahip/KaHIP/deploy/graphchecker ../b3hepv/${MAP}/kahip.graph 
 ../../kahip/KaHIP/deploy/kaffpa ../b3hepv/${MAP}/kahip.graph --output_filename=../b3hepv/${MAP}/kaffpaIndex.txt --k ${NPARTITIONS} --preconfiguration=strong
 
