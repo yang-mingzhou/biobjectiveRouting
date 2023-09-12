@@ -51,7 +51,7 @@ make clean
 ```
 
 ## Files:
-0. [Makefile](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/makefile): Makefile for the both HBOR and HBOR-B
+0. [Makefile](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/Makefile): Makefile for the both HBOR and HBOR-B
 1. [bhepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepvWorkflow.sh): Workflow script for HBOR
 2. [b3hepvWorkflow.sh](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/b3hepvWorkflow.sh): Workflow script for HBOR-B
 3. [bhepv.cpp](https://github.com/yang-mingzhou/biobjectiveRouting/blob/main/src/bhepv.cpp): 
