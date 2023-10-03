@@ -12,3 +12,4 @@ src/*.o
 b3hepv
 bhepv
 *.ipynb_checkpoints
+src/.*

@@ -119,4 +119,53 @@ BodSolutions* bod_paretoPathsInFragmentChar(int s_node, const char* filename){
 }
 
 
+AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* graphData) {
+    int num_nodes = graphData->numOfGnode;
+    AllToAllSolutions* all_solutions = (AllToAllSolutions*) malloc(sizeof(AllToAllSolutions));
+    all_solutions->num_nodes = num_nodes;
+
+    // Allocate memory for the 2D array of solutions
+    all_solutions->solutions = (BodSolutions**) malloc(num_nodes * sizeof(BodSolutions*));
+    for (int i = 0; i < num_nodes; ++i) {
+        all_solutions->solutions[i] = (BodSolutions*) malloc(num_nodes * sizeof(BodSolutions));
+    }
+
+    // Initialize global variables and allocate memory once
+    num_gnodes = graphData->numOfGnode;
+    bod_assign_global_variables(graphData);
+    new_graph();
+
+    // Compute Pareto paths from each node to all other nodes
+    for (int i = 0; i < num_nodes; ++i) {
+        start = i;  // Set the global start variable directly
+        BodSolutions* result = call_bod();
+        all_solutions->solutions[i] = result;
+        // Log the current status every 100 iterations
+        if ((i + 1) % 100 == 0) {
+            printf("Processed node %d out of %d\n", i + 1, num_nodes);
+        }
+    }
+
+    // Free allocated memory for the graph data structure
+    freeMemoryForTable(num_gnodes);
+    return all_solutions;
+}
+
+void free_all_to_all_solutions(AllToAllSolutions* all_solutions) {
+    if (all_solutions == NULL) {
+        return;
+    }
+
+    int num_nodes = all_solutions->num_nodes;
+    if (all_solutions->solutions != NULL) {
+        for (int i = 0; i < num_nodes; ++i) {
+            BodSolutions* solutions_array = all_solutions->solutions[i];
+            if (solutions_array != NULL) {
+                bod_freeSolutions(solutions_array);
+            }
+        }
+        free(all_solutions->solutions);
+    }
+    free(all_solutions);
+}
 
