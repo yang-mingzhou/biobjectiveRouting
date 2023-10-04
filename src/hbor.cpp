@@ -101,26 +101,6 @@ int BoundaryPath::getNode(int i) const {
 }
 
 
-// BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
-//     if (isPreceeding(other)) {
-//         vector<int> newLub(4);
-//         vector<int> newPath;
-
-//         // Calculate the sum of corresponding lub values
-//         for (int i = 0; i < 4; ++i) {
-//             newLub[i] = lub[i] + other.lub[i];
-//         }
-
-//         // Append the path elements from both paths, removing duplicates
-//         newPath = path;
-//         newPath.insert(newPath.end(), other.path.begin() + 1, other.path.end());
-
-//         return BoundaryPath(newLub, newPath);
-//     }
-//     throw runtime_error("Cannot concatenate paths. The paths are not preceeding each other.");
-// }
-
-
 
 BoundaryPath BoundaryPath::concatWith(const BoundaryPath& other) const {
     if (isPreceeding(other)) {
