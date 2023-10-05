@@ -286,19 +286,6 @@ class Bi_objective_DFS{
     Function:
     Use DFS to traverse all possible paths among one pair of nodes(s_node, d_node) of the map. The cost the the paths is the sums of each component of the cost with the edges it visited. Each time the DFS expand, call isDominated(s_node, d_node, cost1, cost2, vector<vector<int>>existingLUBs). If returned false, continue. If returned true, backtrack from the node and expand on other node.
     */
-//     vector<vector<int>> traverse()
-//     {
-//         vector<int> current_path;
-//         vector<vector<int>> total_cost_record;
-//         vector<int> start_cost = {0, 0, 0, 0};
-//         bool withInFragmentFlag = true;
-
-//         vector<vector<int>> *all_paths = new vector<vector<int>>();
-//         DFS(current_s_node, current_path, total_cost_record, start_cost, all_paths,withInFragmentFlag);
-
-//         return *all_paths;
-//     }
-    
     vector<vector<int>> traverse()
     {
         vector<int> current_path;
@@ -423,36 +410,7 @@ class Bi_objective_DFS{
             }
             myfile.close();
 
-//             json s_node_key;
-//             for (int i=0; i<allpath.size(); i++){
-//                 json d_node_key;
-//                 string s_node = to_string(allpath[i][4]);
-//                 string d_node = to_string(allpath[i][5]);
-//                 int next_node = allpath[i][7];
-//                 allpath[i].erase(allpath[i].begin()+4, allpath[i].end());
-//                 allpath[i].push_back(next_node);
-//                 vector<vector<int>> temp;
-//                 temp.push_back(allpath[i]);
 
-//                 // if there is no s_node as a key in json 
-//                 if (!s_node_key.contains(s_node)){
-//                     d_node_key[d_node] = temp;
-//                     s_node_key[s_node] = d_node_key;
-//                 } else {
-//                     // if there is a s_node as a key but no d_node as a key
-//                     if (!s_node_key[s_node].contains(d_node)){
-//                         s_node_key[s_node][d_node] = temp;
-//                     // if both s_node and d_noe exists as a key in json
-//                     } else {
-//                         s_node_key[s_node][d_node].push_back(allpath[i]);
-//                     }
-//                 }
-//             }
-
-//             // ATTENTION: key in the json file would be all stirngs
-//             ofstream jsonfile(folderpath + "/boundaryEncodedPathView.json");
-//             jsonfile << s_node_key.dump();
-//             jsonfile.close();
         }
         
     }

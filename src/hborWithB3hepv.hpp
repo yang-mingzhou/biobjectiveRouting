@@ -43,9 +43,48 @@ public:
 };
 
 
-class HBORBasic {
+class BoundaryPath {
+    // for each boundaryPath, the lub: four elements are (LB1, LB2, UB1, UB2); path: a sequence of boundary nodes
+    public:
+    // Constructor
+    BoundaryPath() = default;
+    BoundaryPath(const std::vector<int>& lub_values, const std::vector<int>& path_values)
+        : lub(lub_values), path(path_values) {
+        // Ensure the lubs vector has exactly 4 elements
+        if (lub_values.size() != 4) {
+            throw std::runtime_error("Invalid number of lubs values. Expected 4 elements.");
+        }
+    }
+
+    int startNode() const;
+    int endNode() const;
+    int getNode(int i) const;
+    int len() const {
+        return path.size();
+    }
+    bool isDominatedBy(const BoundaryPath& other) const;
+    void printPath() const;
+    void printLub() const;
+    bool isPreceeding(const BoundaryPath& other) const;
+    BoundaryPath concatWith(const BoundaryPath& other) const;
+    BoundaryPath reverse() const {
+        std::vector<int> reversed_path(path.rbegin(), path.rend());
+        return BoundaryPath(lub, reversed_path);
+    }
+    
+    bool eq(const BoundaryPath& other) const {
+        return path == other.path;
+    }
+
+    std::vector<int> lub; // Contains 4 elements
+    std::vector<int> path;
+
+};
+
+
+class B3HBORBasic {
 public:
-    HBORBasic(const std::string& map, int npar);
+    B3HBORBasic(const std::string& map, int npar);
 
     void load();
     int hbor(int snode, int dnode);
@@ -63,7 +102,11 @@ private:
     std::vector<std::vector<int>> fragmentIndex;
     std::vector<std::vector<int>> boundaryNodeSet;
     std::map<int, std::map<int, std::vector<std::vector<int>>>> fragmentEncodedPathView;
-    std::map<int, std::map<int, std::vector<std::vector<int>>>> boundaryEncodedPathView;
+//     std::map<int, std::map<int, std::vector<std::vector<int>>>> boundaryEncodedPathView;
+    std::unordered_map<int, std::unordered_map<int, std::vector<BoundaryPath>>> b3boundaryEPV;
+    std::unordered_map<int, std::unordered_map<int, BoundaryPath>> b3fragmentEPV;
+    std::unordered_map<int, std::unordered_map<int, std::vector<int>>> adjacentLub;
+    
     int numVertices;
 
     void loadEncodedPathView();
@@ -78,6 +121,13 @@ private:
     std::vector<BiobjectivePath> boaPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
     void readGraphDataFromFile(GraphData* graphData, const std::string& filename);
     void cleanupGraphDataCpp(GraphData* graphData);
+    // new function for using B3boundaryEPV
+    std::vector<BiobjectivePath> expandPathCostOf(BoundaryPath boundaryPath);
+    std::vector<BiobjectivePath> combineCostSet(std::vector<BiobjectivePath> costSet1, std::vector<BiobjectivePath> costSet2);
+    std::vector<BiobjectivePath> pathRetrievalWithInFragment(int snode, int dnode);
+    std::vector<BoundaryPath> onePairB3PathOf(int snode, int dnode, int sBN, int dBN);
+    std::vector<BoundaryPath> reversePaths(const std::vector<BoundaryPath>& paths);
+    
 //     std::vector<BiobjectivePath> namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
 };
 

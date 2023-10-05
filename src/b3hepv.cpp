@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 
+
 using json = nlohmann::json;
 using namespace std;
 
@@ -599,27 +600,14 @@ void precomputation(const string & mapName){
     BiobjectiveGraph graph("../Maps/"+mapName+"-road-d.txt");
     try {
         std::string outputFolderName = "../b3hepv/"+mapName;
-        auto startTime = std::chrono::high_resolution_clock::now();
         // Read the partition information from a file
         graph.readPartition(outputFolderName+"/kaffpaIndex.txt");
         graph.updateBoundaryNodes();
         std::cout << "Partition Count " << graph.partitionCount << std::endl;
         // Print the boundary nodes
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of read partition: " << duration.count() << " milliseconds" << std::endl;
-        
-        startTime = std::chrono::high_resolution_clock::now();
         graph.saveFragments(outputFolderName);
-        endTime = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of fragments saving: " << duration.count() << " milliseconds" << std::endl;
-        
-        startTime = std::chrono::high_resolution_clock::now();
         graph.saveExistingLUB(outputFolderName);
-        endTime = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of existing LUBS: " << duration.count() << " milliseconds" << std::endl;
+
                 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
@@ -646,29 +634,17 @@ void B3HEPV::encodingB3FragmentPathView(const string & mapName){
     BiobjectiveGraph graph("../Maps/"+mapName+"-road-d.txt");
     try {
         std::string outputFolderName = "../b3hepv/"+mapName;
-        auto startTime = std::chrono::high_resolution_clock::now();
         // Read the partition information from a file
         graph.readPartition(outputFolderName+"/kaffpaIndex.txt");
         graph.updateBoundaryNodes();
         std::cout << "Partition Count " << graph.partitionCount << std::endl;
         // Print the boundary nodes
-        auto endTime = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of read partition: " << duration.count() << " milliseconds" << std::endl;
-        
-
-        startTime = std::chrono::high_resolution_clock::now();
+ 
         graph.saveFragments(outputFolderName);
-        endTime = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of fragments saving: " << duration.count() << " milliseconds" << std::endl;
+
         
-        startTime = std::chrono::high_resolution_clock::now();
         graph.saveExistingLUB(outputFolderName);
-        endTime = std::chrono::high_resolution_clock::now();
-        duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        std::cout << "Elapsed time of existing LUBS: " << duration.count() << " milliseconds" << std::endl;
-                
+        
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }

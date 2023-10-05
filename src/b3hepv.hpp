@@ -19,12 +19,6 @@
 #include "bod.h"
 #include "biobjectiveGraph.h"
 
-struct Edge {
-    int end;
-    int cost1;
-    int cost2;
-    Edge(int _end, int _cost1, int _cost2) : end(_end), cost1(_cost1), cost2(_cost2) {}
-};
 
 
 class B3HEPV{
@@ -45,7 +39,7 @@ class B3HEPV{
     std::unordered_map<int, std::unordered_map<int, int>> fragmentIdToOriginId; // fragment:locaID -> globalID
     std::unordered_map<int,int> boundaryIdMap;
     
-    BHEPV(const std::string& map, int npar);
+    B3HEPV(const std::string& map, int npar);
     
     bool isBoundaryNode(int vertex) const {
         return boundaryNodes.count(vertex) > 0;
