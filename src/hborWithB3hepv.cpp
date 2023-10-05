@@ -502,6 +502,31 @@ std::vector<BoundaryPath> B3HBORBasic::reversePaths(const std::vector<BoundaryPa
     return reversed_paths;
 }
 
+vector<BoundaryPath> B3HBORBasic::boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
+    // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
+    vector<BoundaryPath> paretoBoundaryPath;
+    BoundaryPath currentPath, comparedPath;
+    vector<int> paretoIndex(boundaryPathSet.size(), 1);
+    for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
+        if (paretoIndex[i]==1){
+            currentPath = boundaryPathSet[i];
+            for (size_t j = i+1; j < boundaryPathSet.size(); ++j){
+                comparedPath = boundaryPathSet[j];
+                if (currentPath.isDominatedBy(comparedPath)){
+                    paretoIndex[i]=0;
+                }
+                else if (comparedPath.isDominatedBy(currentPath)){
+                    paretoIndex[j]=0;
+                }
+            }   
+        }
+        if (paretoIndex[i]==1){
+            paretoBoundaryPath.push_back(currentPath);
+        }
+    }
+    return paretoBoundaryPath;
+}
+
 vector<BoundaryPath> B3HBORBasic::onePairB3PathOf(int snode, int dnode, int sBN, int dBN) {
     // cout << snode << dnode<<sBN << dBN<<endl;
     vector<BoundaryPath> onePairBoundaryPathSet;
@@ -552,12 +577,14 @@ vector<BoundaryPath> B3HBORBasic::onePairB3PathOf(int snode, int dnode, int sBN,
         }
     }
     // cout<<onePairBoundaryPathSet.size()<<endl;
-    return onePairBoundaryPathSet;
+    return boundaryPathDominanceCheck(onePairBoundaryPathSet);
 }
 
 
 
+
 vector<BiobjectivePath> B3HBORBasic::pathRetrievalWithInFragment(int snode, int dnode) {
+    numberOfExpendedEdges++;
     vector<BiobjectivePath> onePairBoundaryPathSet;
 
     if (snode == dnode) {
@@ -652,6 +679,7 @@ void B3HBORBasic::load(){
 
 
 int B3HBORBasic::hbor(int snode, int dnode){
+    numberOfExpendedEdges =0;
     cout<< "snodednode" << snode << dnode <<endl;
     vector<BiobjectivePath> solutionSet;
     int sBN, dBN;
@@ -683,7 +711,7 @@ int B3HBORBasic::hbor(int snode, int dnode){
         }
     }
 
-    
+    cout<< "Number of boundary edges expended: " << numberOfExpendedEdges<<endl;
     cout<< "boundary path size: " <<solutionSet.size() <<endl;
     
     vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);

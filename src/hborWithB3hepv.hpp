@@ -108,6 +108,8 @@ private:
     std::unordered_map<int, std::unordered_map<int, std::vector<int>>> adjacentLub;
     
     int numVertices;
+    
+    int numberOfExpendedEdges;
 
     void loadEncodedPathView();
     void loadBoundaryNodes();
@@ -127,7 +129,7 @@ private:
     std::vector<BiobjectivePath> pathRetrievalWithInFragment(int snode, int dnode);
     std::vector<BoundaryPath> onePairB3PathOf(int snode, int dnode, int sBN, int dBN);
     std::vector<BoundaryPath> reversePaths(const std::vector<BoundaryPath>& paths);
-    
+    std::vector<BoundaryPath> boundaryPathDominanceCheck(std::vector<BoundaryPath> boundaryPathSet);
 //     std::vector<BiobjectivePath> namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
 };
 

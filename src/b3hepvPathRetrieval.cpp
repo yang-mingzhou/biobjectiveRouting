@@ -111,8 +111,8 @@ void processQueries(const std::string& mapName, int nPar) {
         hborQueryTimes.push_back(hborQueryTime);
         
         
-        std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR: " << hborNsolutions << " solutions, BOA: " << boaNsolutions << " solutions." << std::endl;
-        std::cout << "Time used - HBOR: " << hborQueryTime*1000 << " milliseconds, BOA: " << boaQueryTime*1000 << " milliseconds." << std::endl;
+        std::cout << "Query (" << startNode << ", " << endNode << ") - HBOR-B: " << hborNsolutions << " solutions, BOA: " << boaNsolutions << " solutions." << std::endl;
+        std::cout << "Time used - HBOR-B: " << hborQueryTime*1000 << " milliseconds, BOA: " << boaQueryTime*1000 << " milliseconds." << std::endl;
         
         queryID++;
         
@@ -125,7 +125,7 @@ void processQueries(const std::string& mapName, int nPar) {
     // Calculate the average times and print them
     double hborAverageTime = hborQueryTimes.size() > 0 ? hborQueryTimeSum / hborQueryTimes.size() : 0;
     double boaAverageTime = boaQueryTimes.size() > 0 ? boaQueryTimeSum / boaQueryTimes.size() : 0;
-    std::cout << "Average HBOR query time: " << hborAverageTime*1000 << " milliseconds.\n";
+    std::cout << "Average HBOR-B query time: " << hborAverageTime*1000 << " milliseconds.\n";
     std::cout << "Average BOA query time: " << boaAverageTime*1000 << " milliseconds.\n";
     
     
@@ -133,7 +133,7 @@ void processQueries(const std::string& mapName, int nPar) {
     long hborAverageMemoryUsage = std::accumulate(hborMemoryUsages.begin(), hborMemoryUsages.end(), 0L) / hborMemoryUsages.size();
     long boaAverageMemoryUsage = std::accumulate(boaMemoryUsages.begin(), boaMemoryUsages.end(), 0L) / boaMemoryUsages.size();
 
-    std::cout << "Average HBOR memory usage: " << hborAverageMemoryUsage << "KB.\n";
+    std::cout << "Average HBOR-B memory usage: " << hborAverageMemoryUsage << "KB.\n";
     std::cout << "Average BOA memory usage: " << boaAverageMemoryUsage << "KB.\n";
    
 }
