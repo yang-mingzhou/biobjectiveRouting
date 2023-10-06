@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <climits>
+#include <list>
 
 #undef max
 
@@ -17,7 +18,7 @@ bool BoundaryPath::isDominatedBy(const BoundaryPath& other) const {
     }
 
     if ((lub[0] >= other.lub[0] && lub[1] >= other.lub[3])|| (lub[0] >= other.lub[2] && lub[1] >= other.lub[1])) {
-        if (!(lub[0] == other.lub[2] && lub[1] == other.lub[3]) || (lub[0] != lub[2])|| (lub[1] != lub[3])|| (other.lub[0] != other.lub[2])|| (other.lub[1] != other.lub[3]) ) {
+        if ( (lub[0] != lub[2])|| (lub[1] != lub[3])|| (other.lub[0] != other.lub[2])|| (other.lub[1] != other.lub[3]) || !(lub[0] == other.lub[2] && lub[1] == other.lub[3]) ) {
             return true;
         }
     }
@@ -151,8 +152,20 @@ void B3HBORBasic::loadEncodedPathView() {
 //     }
 //     cout<< "Number of encoded bundary paths: " << cnt_BoundaryPath << endl;
     
+    
+    
     /* Instead, load bound-based boundary EPV */
     // {snode: {dnoded:[[lb1,lb2,ub1,ub2,path1],[lb1',lb2',ub1',ub2',path2], ...]}}
+    // Assuming BoundaryPathCompare is already defined
+    auto boundaryPathCompare = [](const BoundaryPath& a, const BoundaryPath& b) {
+        if (a.lub[0] == b.lub[0]) {
+            return a.lub[1] < b.lub[1];
+        }
+        return a.lub[0] < b.lub[0];
+    };
+
+    
+    
     string boundaryEncodedPathFileName =  fileFolderName + "/boundaryEncodedPathView.json";
     ifstream file(boundaryEncodedPathFileName);
     if (!file.is_open()) {
@@ -170,39 +183,41 @@ void B3HBORBasic::loadEncodedPathView() {
     int cnt_BoundaryPath = 0;
     // Access the JSON data and populate the data structure
     if (jsonData.is_object()) {
+        
         for (const auto& entry1 : jsonData.items()) {
             int snode = stoi(entry1.key());
 
-            if (entry1.value().is_object()) {
-                for (const auto& entry2 : entry1.value().items()) {
-                    int dnode = stoi(entry2.key());
+            for (const auto& entry2 : entry1.value().items()) {
+                int dnode = stoi(entry2.key());
 
-                    if (entry2.value().is_array()) {
-                        vector<BoundaryPath> pathSet;
-                        for (const auto& arrayValue : entry2.value()) {
-                            if (arrayValue.is_array()) {
-                                BoundaryPath path;
-                                cnt_BoundaryPath ++;
-                                for (size_t i = 0; i < arrayValue.size(); i++) {
-                                    
-                                    if (arrayValue[i].is_number()) {
-                                        
-                                        if (i < 4) {
-                                            path.lub.push_back(arrayValue[i]);
-                                        } else {
-                                            path.path.push_back(arrayValue[i]);
-                                        }
-                                    }
-                                }
-                                pathSet.push_back(path);
+                vector<BoundaryPath> pathSet;
+                for (const auto& arrayValue : entry2.value()) {
+                    BoundaryPath path;
+                    cnt_BoundaryPath ++;
+                    for (size_t i = 0; i < arrayValue.size(); i++) {
+                        if (arrayValue[i].is_number()) {
+                            if (i < 4) {
+                                path.lub.push_back(arrayValue[i]);
+                            } else {
+                                path.path.push_back(arrayValue[i]);
                             }
                         }
-                        b3boundaryEPV[snode][dnode] = pathSet;
                     }
+                    pathSet.push_back(path);
                 }
+
+                // Sort the pathSet
+                std::sort(pathSet.begin(), pathSet.end(), boundaryPathCompare);
+                b3boundaryEPV[snode][dnode] = pathSet;
+                b3boundaryEPV[dnode][snode] = reversePaths(pathSet);
             }
         }
-    }
+   
+   }
+
+        
+    
+ 
     cout<< "Number of boundary paths: " << cnt_BoundaryPath << endl;
     int cnt_fragmentPath = 0;
 
@@ -394,7 +409,7 @@ vector<BiobjectivePath> B3HBORBasic::boaPathRetrievalWithInFragment(int snode, i
         pathCostSet.push_back(currentSol);
         i++;
     } 
-    cout<<pathCostSet.size()<<endl;
+//     cout<<pathCostSet.size()<<endl;
     return pathCostSet;
 }
 
@@ -502,83 +517,62 @@ std::vector<BoundaryPath> B3HBORBasic::reversePaths(const std::vector<BoundaryPa
     return reversed_paths;
 }
 
+// vector<BoundaryPath> B3HBORBasic::boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
+//     // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
+//     vector<BoundaryPath> paretoBoundaryPath;
+//     BoundaryPath currentPath, comparedPath;
+//     vector<int> paretoIndex(boundaryPathSet.size(), 1);
+//     for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
+//         if (paretoIndex[i]==1){
+//             currentPath = boundaryPathSet[i];
+//             for (size_t j = i+1; j < boundaryPathSet.size(); ++j){
+//                 comparedPath = boundaryPathSet[j];
+//                 if (currentPath.isDominatedBy(comparedPath)){
+//                     paretoIndex[i]=0;
+//                 }
+//                 else if (comparedPath.isDominatedBy(currentPath)){
+//                     paretoIndex[j]=0;
+//                 }
+//             }   
+//         }
+//         if (paretoIndex[i]==1){
+//             paretoBoundaryPath.push_back(currentPath);
+//         }
+//     }
+//     return paretoBoundaryPath;
+// }
+
 vector<BoundaryPath> B3HBORBasic::boundaryPathDominanceCheck(vector<BoundaryPath> boundaryPathSet){
-    // for each boundaryPath, the first four elements are (LB1, LB2, UB1, UB2), respectively
-    vector<BoundaryPath> paretoBoundaryPath;
-    BoundaryPath currentPath, comparedPath;
-    vector<int> paretoIndex(boundaryPathSet.size(), 1);
-    for (size_t i = 0; i < boundaryPathSet.size(); ++i) {
-        if (paretoIndex[i]==1){
-            currentPath = boundaryPathSet[i];
-            for (size_t j = i+1; j < boundaryPathSet.size(); ++j){
-                comparedPath = boundaryPathSet[j];
-                if (currentPath.isDominatedBy(comparedPath)){
-                    paretoIndex[i]=0;
-                }
-                else if (comparedPath.isDominatedBy(currentPath)){
-                    paretoIndex[j]=0;
-                }
-            }   
+    // Sort the boundary paths by the first and second elements of lub.
+    std::sort(boundaryPathSet.begin(), boundaryPathSet.end(), [](const BoundaryPath& a, const BoundaryPath& b) {
+        if (a.lub[0] == b.lub[0]) {
+            return a.lub[1] < b.lub[1];
         }
-        if (paretoIndex[i]==1){
-            paretoBoundaryPath.push_back(currentPath);
-        }
-    }
-    return paretoBoundaryPath;
-}
-
-vector<BoundaryPath> B3HBORBasic::onePairB3PathOf(int snode, int dnode, int sBN, int dBN) {
-    // cout << snode << dnode<<sBN << dBN<<endl;
-    vector<BoundaryPath> onePairBoundaryPathSet;
-    BoundaryPath headPath, tailPath, onePairPath;
-
-    if (snode == sBN) {
-        headPath = BoundaryPath({0, 0, 0, 0}, {snode});
-    } else {
-        if (b3fragmentEPV.count(snode) > 0 && b3fragmentEPV.at(snode).count(sBN) > 0) {
-            headPath = b3fragmentEPV.at(snode).at(sBN);
-        } else if (b3fragmentEPV.count(sBN) > 0 && b3fragmentEPV.at(sBN).count(snode) > 0) {
-            headPath = b3fragmentEPV.at(sBN).at(snode).reverse();
-        } else {
-            throw std::runtime_error("Missing entry in b3fragmentEPV");
-        }
-    }
-
-    if (dnode == dBN) {
-        tailPath = BoundaryPath({0, 0, 0, 0}, {dnode});
-    } else {
-        if (b3fragmentEPV.count(dBN) > 0 && b3fragmentEPV.at(dBN).count(dnode) > 0) {
-            tailPath = b3fragmentEPV.at(dBN).at(dnode);
-        } else if (b3fragmentEPV.count(dnode) > 0 && b3fragmentEPV.at(dnode).count(dBN) > 0) {
-            tailPath = b3fragmentEPV.at(dnode).at(dBN).reverse();
-        } else {
-            throw std::runtime_error("Missing entry in b3fragmentEPV");
-        }
+        return a.lub[0] < b.lub[0];
+    });
+    
+    // Using a list to maintain the order of insertion and allow for efficient removals.
+    std::list<BoundaryPath> survivedPaths(boundaryPathSet.begin(), boundaryPathSet.end());
+    
+    for (auto it_i = survivedPaths.begin(); it_i != survivedPaths.end(); ++it_i) {
+        auto it_j = it_i;
+        advance(it_j, 1);
+        while (it_j != survivedPaths.end()) {
+            if (it_j->isDominatedBy(*it_i)) {
+                // If j is dominated by i, remove j from the list.
+                it_j = survivedPaths.erase(it_j);
+            } else {
+                ++it_j;
+            }
+        }   
     }
     
-    if (sBN == dBN){
-        onePairPath = headPath.concatWith(tailPath);
-        onePairBoundaryPathSet.push_back(onePairPath);
-        return onePairBoundaryPathSet;
-
-    }
-    else if (b3boundaryEPV.count(sBN) > 0 && b3boundaryEPV.at(sBN).count(dBN) > 0) {
-        const vector<BoundaryPath>& interPathSetBetweenSbnAndDbn = b3boundaryEPV.at(sBN).at(dBN);
-        for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
-            onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
-            onePairBoundaryPathSet.push_back(onePairPath);
-        }
-    }
-    else if (b3boundaryEPV.count(dBN) > 0 && b3boundaryEPV.at(dBN).count(sBN) > 0){
-        const vector<BoundaryPath>& interPathSetBetweenSbnAndDbn = reversePaths(b3boundaryEPV.at(dBN).at(sBN));
-        for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
-            onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
-            onePairBoundaryPathSet.push_back(onePairPath);
-        }
-    }
-    // cout<<onePairBoundaryPathSet.size()<<endl;
-    return boundaryPathDominanceCheck(onePairBoundaryPathSet);
+    return vector<BoundaryPath>(survivedPaths.begin(), survivedPaths.end());
 }
+
+
+
+
 
 
 
@@ -652,17 +646,49 @@ vector<BiobjectivePath> B3HBORBasic::expandPathCostOf(BoundaryPath boundaryPath)
 
 
 
-vector<BiobjectivePath> B3HBORBasic::onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN) {
-    vector<BoundaryPath> boundBasedBoundaryPathSet = onePairB3PathOf(snode, dnode, sBN, dBN);
+vector<BiobjectivePath> B3HBORBasic::expandPathForBoundaryPathSet(vector<BoundaryPath> boundBasedBoundaryPathSet) {
     vector<BiobjectivePath> expendedPathCostSet;
     for (size_t i = 0; i < boundBasedBoundaryPathSet.size(); ++i) {
         vector<BiobjectivePath> pathCostWithOneBoundaryPath = expandPathCostOf(boundBasedBoundaryPathSet[i]);
         expendedPathCostSet.insert(expendedPathCostSet.end(), pathCostWithOneBoundaryPath.begin(), pathCostWithOneBoundaryPath.end());
     }
-    return dominanceCheck(expendedPathCostSet);
+    return expendedPathCostSet;
 }
 
+void B3HBORBasic::populateSortedBoundaryPairs() {
+    auto boundaryPathCompare = [](const BoundaryPath& a, const BoundaryPath& b) {
+        if (a.lub[0] == b.lub[0]) {
+            return a.lub[1] < b.lub[1];
+        }
+        return a.lub[0] < b.lub[0];
+    };
 
+    for (int sFragment = 0; sFragment < boundaryNodeSet.size(); ++sFragment) {
+        for (int dFragment = 0; dFragment < boundaryNodeSet.size(); ++dFragment) {
+            vector<int> sBoundaryNode = boundaryNodeSet[sFragment];
+            vector<int> dBoundaryNode = boundaryNodeSet[dFragment];
+            
+            vector<pair<int, int>> sortedBoundaryPairs;
+            for (const int& sBN : sBoundaryNode) {
+                for (const int& dBN : dBoundaryNode) {
+                    if (b3boundaryEPV[sBN].find(dBN) != b3boundaryEPV[sBN].end()) {
+                        sortedBoundaryPairs.emplace_back(sBN, dBN);
+                    }
+                }
+            }
+
+            std::sort(sortedBoundaryPairs.begin(), sortedBoundaryPairs.end(),
+                [&](const pair<int, int>& pair1, const pair<int, int>& pair2) {
+                    const BoundaryPath& path1 = b3boundaryEPV[pair1.first][pair1.second][0];
+                    const BoundaryPath& path2 = b3boundaryEPV[pair2.first][pair2.second][0];
+                    return boundaryPathCompare(path1, path2);
+                }
+            );
+
+            sortedBoundaryPairsMap[sFragment][dFragment] = sortedBoundaryPairs;
+        }
+    }
+}
 
 
 
@@ -672,20 +698,134 @@ void B3HBORBasic::load(){
     loadEncodedPathView();
     loadFragmentIndex();
     loadFragments();
+    populateSortedBoundaryPairs();
     cout<< "loaded!" << endl;
 }
 
 
 
 
+// int B3HBORBasic::hbor(int snode, int dnode){
+//     numberOfExpendedEdges =0;
+//     cout<< "snodednode" << snode << dnode <<endl;
+//     vector<BiobjectivePath> solutionSet;
+//     int sBN, dBN;
+
+//     cout<< fragmentIndex.size() <<endl;
+    
+//     int sfragment = fragmentIndex[snode-1][0];
+//     int dfragment = fragmentIndex[dnode-1][0];
+    
+//     cout<< "sfragment: " << sfragment << " ,dfragment "<< dfragment<<endl;
+    
+//     vector<int> sBoundaryNode = boundaryNodeSet[sfragment];
+//     vector<int> dBoundaryNode = boundaryNodeSet[dfragment];
+    
+//     if (sfragment==dfragment){
+//         vector<BiobjectivePath> infragmentCostSet = boaPathRetrievalWithInFragment(snode, dnode, sfragment);
+//         solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
+//     }
+    
+//     for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
+        
+//         sBN = sBoundaryNode[i];
+//         for (size_t j = 0; j < dBoundaryNode.size(); ++j){
+//             dBN = dBoundaryNode[j];
+// //             cout<< "sBN" << sBN << dBN <<endl;
+//             vector<BiobjectivePath> onePairBoundaryPathSet = onePairBoundaryPathOf(snode, dnode, sBN, dBN); 
+//             solutionSet.insert(solutionSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
+            
+//         }
+//     }
+    
+//     vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
+//     return paretoSet.size();
+    
+// }
+
+
+bool B3HBORBasic::isDominatedBySmallestInHeap(const BoundaryPath& path, const std::priority_queue<BoundaryPath, vector<BoundaryPath>, BoundaryPathCompare>& minHeap) {
+    if (minHeap.empty()) return false;
+    const BoundaryPath& smallestPath = minHeap.top();
+    return path.isDominatedBy(smallestPath);
+}
+
+
+vector<BoundaryPath> B3HBORBasic::onePairB3PathOf(int snode, int dnode, int sBN, int dBN, std::priority_queue<BoundaryPath, vector<BoundaryPath>, BoundaryPathCompare>& minHeap) {
+    vector<BoundaryPath> onePairBoundaryPathSet;
+    BoundaryPath headPath, tailPath, onePairPath;
+
+    // Get headPath
+    auto head_it = b3fragmentEPV.find(snode);
+    if (snode == sBN || (head_it != b3fragmentEPV.end() && head_it->second.find(sBN) != head_it->second.end())) {
+        headPath = (snode == sBN) ? BoundaryPath({0, 0, 0, 0}, {snode}) : head_it->second[sBN];
+    } else {
+        headPath = b3fragmentEPV[sBN][snode].reverse();
+    }
+
+    // Similar approach for tailPath
+    auto tail_it = b3fragmentEPV.find(dBN);
+    if (dnode == dBN || (tail_it != b3fragmentEPV.end() && tail_it->second.find(dnode) != tail_it->second.end())) {
+        tailPath = (dnode == dBN) ? BoundaryPath({0, 0, 0, 0}, {dnode}) : tail_it->second[dnode];
+    } else {
+        tailPath = b3fragmentEPV[dnode][dBN].reverse();
+    }
+    // Processing boundary paths
+    auto sBN_it = b3boundaryEPV.find(sBN);
+    if (sBN == dBN) {
+        onePairPath = headPath.concatWith(tailPath);
+        onePairBoundaryPathSet.push_back(onePairPath);
+    } else if (sBN_it != b3boundaryEPV.end() && sBN_it->second.find(dBN) != sBN_it->second.end()) {
+        const vector<BoundaryPath>& interPathSetBetweenSbnAndDbn = sBN_it->second[dBN];
+        for (const auto& interPath : interPathSetBetweenSbnAndDbn) {
+            onePairPath = headPath.concatWith(interPath).concatWith(tailPath);
+            if (!isDominatedBySmallestInHeap(onePairPath, minHeap)) {
+                onePairBoundaryPathSet.push_back(onePairPath);
+                minHeap.push(onePairPath);
+            }
+            else {
+                break;
+            }
+        }
+    } 
+    return onePairBoundaryPathSet;
+}
+
+
+vector<BoundaryPath> B3HBORBasic::paretoBoundaryPathBetween(int snode, int dnode) {
+    vector<BoundaryPath> boundaryPathSet;
+    // Define a min-heap for boundary paths
+    std::priority_queue<BoundaryPath, vector<BoundaryPath>, BoundaryPathCompare> minHeap;
+    
+    int sfragment = fragmentIndex[snode-1][0];
+    int dfragment = fragmentIndex[dnode-1][0];
+    
+
+    // Sorting the boundary node pairs based on the shortest paths between them
+    const vector<pair<int, int>>& sortedBoundaryPairs = sortedBoundaryPairsMap[sfragment][dfragment];
+
+    for (const auto& pair : sortedBoundaryPairs) {
+        int sBN = pair.first;
+        int dBN = pair.second;
+        vector<BoundaryPath> onePairBoundaryPathSet = onePairB3PathOf(snode, dnode, sBN, dBN, minHeap);
+        boundaryPathSet.insert(boundaryPathSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
+    }
+
+    cout << "number of boundary paths before dominance check: " << boundaryPathSet.size() << endl;
+    boundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
+    cout << "number of boundary paths after dominance check: " << boundaryPathSet.size() << endl;
+
+    return boundaryPathSet;
+}
+
+
+
+
 int B3HBORBasic::hbor(int snode, int dnode){
-    numberOfExpendedEdges =0;
-    cout<< "snodednode" << snode << dnode <<endl;
+    numberOfExpendedEdges = 0;
     vector<BiobjectivePath> solutionSet;
     int sBN, dBN;
-
-    cout<< fragmentIndex.size() <<endl;
-    
+  
     int sfragment = fragmentIndex[snode-1][0];
     int dfragment = fragmentIndex[dnode-1][0];
     
@@ -699,32 +839,26 @@ int B3HBORBasic::hbor(int snode, int dnode){
         solutionSet.insert(solutionSet.end(), infragmentCostSet.begin(), infragmentCostSet.end());
     }
     
-    for (size_t i = 0; i < sBoundaryNode.size(); ++i) {
-        
-        sBN = sBoundaryNode[i];
-        for (size_t j = 0; j < dBoundaryNode.size(); ++j){
-            dBN = dBoundaryNode[j];
-//             cout<< "sBN" << sBN << dBN <<endl;
-            vector<BiobjectivePath> onePairBoundaryPathSet = onePairBoundaryPathOf(snode, dnode, sBN, dBN); 
-            solutionSet.insert(solutionSet.end(), onePairBoundaryPathSet.begin(), onePairBoundaryPathSet.end());
-            
-        }
-    }
-
-    cout<< "Number of boundary edges expended: " << numberOfExpendedEdges<<endl;
-    cout<< "boundary path size: " <<solutionSet.size() <<endl;
+   
+    vector<BoundaryPath> boundaryPathSet = paretoBoundaryPathBetween(snode, dnode);
     
-    vector<BiobjectivePath> paretoSet = dominanceCheck(solutionSet);
-//     for (size_t j = 0; j < paretoSet.size(); ++j){
-//         cout<< "result: " << paretoSet[j].cost1 <<", " <<paretoSet[j].cost2 <<endl;
-//     }
-
-    return paretoSet.size();
+  
+    vector<BiobjectivePath> superParetoCostSet = expandPathForBoundaryPathSet(boundaryPathSet);
+    
+    
+    solutionSet.insert(solutionSet.end(), superParetoCostSet.begin(), superParetoCostSet.end());
+      
+    vector<BiobjectivePath> solutions = dominanceCheck(solutionSet); 
+    int nsolutions = solutions.size();
+    solutions.clear();
+    cout<< "Number of boundary edges expended: " << numberOfExpendedEdges<<endl;
+    return nsolutions;
+    
+    
     
 }
 
 int B3HBORBasic::boa(int snode, int dnode){
-    cout<< "snodednode" << snode << dnode <<endl;
     vector<BiobjectivePath> solutionSet = boaPathRetrievalWithInFragment(snode, dnode, -1);
 //     for (size_t j = 0; j < solutionSet.size(); ++j){
 //         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
@@ -734,16 +868,7 @@ int B3HBORBasic::boa(int snode, int dnode){
     
 }
 
-// int B3HBORBasic::namor(int snode, int dnode){
-//     cout<< "snodednode" << snode << dnode <<endl;
-//     vector<BiobjectivePath> solutionSet = namorPathRetrievalWithInFragment(snode, dnode, -1);
-// //     for (size_t j = 0; j < solutionSet.size(); ++j){
-// //         cout<< "result: " << solutionSet[j].cost1 <<", " <<solutionSet[j].cost2 <<endl;
-// //     }
 
-//     return solutionSet.size();
-    
-// }
 
 
 void B3HBORBasic::cleanupGraphDataCpp(GraphData* graphData) {
@@ -758,3 +883,7 @@ void B3HBORBasic::freeGraphDataVector(){
         cleanupGraphDataCpp(&currentGraph);
     }
 }
+
+
+
+

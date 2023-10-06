@@ -82,6 +82,18 @@ class BoundaryPath {
 };
 
 
+// Comparison functor for the min-heap.
+struct BoundaryPathCompare {
+    bool operator()(const BoundaryPath& a, const BoundaryPath& b) const {
+        if (a.lub[0] == b.lub[0]) {
+            return a.lub[1] > b.lub[1];  // Note the change to '>' to make it a min-heap.
+        }
+        return a.lub[0] > b.lub[0];
+    }
+};
+
+
+
 class B3HBORBasic {
 public:
     B3HBORBasic(const std::string& map, int npar);
@@ -110,6 +122,8 @@ private:
     int numVertices;
     
     int numberOfExpendedEdges;
+     std::unordered_map<int, std::unordered_map<int, std::vector<std::pair<int, int>>>> sortedBoundaryPairsMap;
+
 
     void loadEncodedPathView();
     void loadBoundaryNodes();
@@ -117,7 +131,10 @@ private:
     void readOriginGraph();
     void readOriginGraphDataFromFile(GraphData* graphData);
     void loadFragmentIndex();
-    std::vector<BiobjectivePath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN);
+    
+    void populateSortedBoundaryPairs();
+
+//     std::vector<BiobjectivePath> onePairBoundaryPathOf(int snode, int dnode, int sBN, int dBN);
     std::vector<BiobjectivePath> generateCombinations(const std::vector<BiobjectivePath>& vec1, const std::vector<BiobjectivePath>& vec2, const std::vector<BiobjectivePath>& vec3);
     std::vector<BiobjectivePath> dominanceCheck(std::vector<BiobjectivePath> superParetoCostSet);
     std::vector<BiobjectivePath> boaPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
@@ -127,9 +144,13 @@ private:
     std::vector<BiobjectivePath> expandPathCostOf(BoundaryPath boundaryPath);
     std::vector<BiobjectivePath> combineCostSet(std::vector<BiobjectivePath> costSet1, std::vector<BiobjectivePath> costSet2);
     std::vector<BiobjectivePath> pathRetrievalWithInFragment(int snode, int dnode);
-    std::vector<BoundaryPath> onePairB3PathOf(int snode, int dnode, int sBN, int dBN);
+//     std::vector<BoundaryPath> onePairB3PathOf(int snode, int dnode, int sBN, int dBN);
     std::vector<BoundaryPath> reversePaths(const std::vector<BoundaryPath>& paths);
     std::vector<BoundaryPath> boundaryPathDominanceCheck(std::vector<BoundaryPath> boundaryPathSet);
+    std::vector<BiobjectivePath> expandPathForBoundaryPathSet(std::vector<BoundaryPath> boundBasedBoundaryPathSet);
+    std::vector<BoundaryPath> paretoBoundaryPathBetween(int snode, int dnode);
+    std::vector<BoundaryPath> onePairB3PathOf(int snode, int dnode, int sBN, int dBN, std::priority_queue<BoundaryPath, std::vector<BoundaryPath>, BoundaryPathCompare>& minHeap);
+    bool isDominatedBySmallestInHeap(const BoundaryPath& path, const std::priority_queue<BoundaryPath, std::vector<BoundaryPath>, BoundaryPathCompare>& minHeap);
 //     std::vector<BiobjectivePath> namorPathRetrievalWithInFragment(int snode, int dnode, int fragmentId);
 };
 
