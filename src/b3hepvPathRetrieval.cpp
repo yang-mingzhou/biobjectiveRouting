@@ -6,7 +6,17 @@
 #include <chrono> // Include the chrono library
 #include <sys/resource.h>
 #include "hborWithB3hepv.hpp"
+
+
+
 using namespace std;
+
+
+
+
+
+   
+
 
 
 void printQueryTimes(const std::vector<double>& hborQueryTimes, const std::vector<double>& boaQueryTimes) {
@@ -71,6 +81,7 @@ void processQueries(const std::string& mapName, int nPar) {
     double hborQueryTimeSum = 0.0, boaQueryTimeSum = 0.0;
     
     
+
     
     while (std::getline(queryFile, line) && (queryCount <= 0 || queryID < queryCount)) {
 
@@ -100,6 +111,7 @@ void processQueries(const std::string& mapName, int nPar) {
         auto startHbor = std::chrono::high_resolution_clock::now();
         int hborNsolutions = 0;
         hborNsolutions = b3hepv.hbor(startNode, endNode); 
+        
         auto endHbor = std::chrono::high_resolution_clock::now();
         
         endMemory = getMemoryUsage();
@@ -119,6 +131,8 @@ void processQueries(const std::string& mapName, int nPar) {
         boaQueryTimeSum += boaQueryTime;
         hborQueryTimeSum += hborQueryTime;
     }
+    
+
     
     b3hepv.freeGraphDataVector();
     printQueryTimes(hborQueryTimes, boaQueryTimes);
@@ -155,6 +169,7 @@ int testQueries(const std::string& mapName, int nPar) {
 
 
 int main(int argc, char* argv[]) {
+
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <map_file> <nPartitions>" << std::endl;
         return 1;

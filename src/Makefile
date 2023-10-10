@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3
+CFLAGS = -O3 -g
 CPPFLAGS = -std=c++11 -lstdc++
 C99FLAGS = -std=c99 -lm -lstdc++
 

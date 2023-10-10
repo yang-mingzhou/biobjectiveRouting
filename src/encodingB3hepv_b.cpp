@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include "dfs_class_v2.h"
+#include "dijkstraForBoundaryEPV.hpp"
 
 using namespace std;
 
@@ -13,13 +13,13 @@ int main(int argc, char** argv) {
     auto startTimeTotal = std::chrono::high_resolution_clock::now();
     std::string mapName = argv[1];
     std::string foldername = "../b3hepv/"+mapName;
-    Bi_objective_DFS bodfs(foldername);
+    Bi_objective_Search bodSearch(foldername);
 
-    bodfs.allPairs();
+    bodSearch.allPairs();
 
-    bodfs.save_all_path("json");
+    bodSearch.save_all_path("json");
 
-    bodfs.convert_map_of_map_to_json_file();
+    bodSearch.convert_map_of_map_to_json_file();
     auto endTimeTotal = std::chrono::high_resolution_clock::now();
     auto durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
     std::cout << "Elapsed time of encoding boundary path view : " << durationTotal.count() << " milliseconds" << std::endl;

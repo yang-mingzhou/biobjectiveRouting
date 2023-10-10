@@ -4,8 +4,9 @@ module load gcc/11.3.0
 gcc -O3 -std=c++11 -o kahip.o kahip.cpp  -lstdc++
 # # -g -fsanitize=address
 gcc -O3 -std=c99 -o b3hepvPrecomputation.o b3hepvPrecomputation.cpp b3hepv.cpp biobjectiveGraph.cpp bodPathRetrieval.c heap.c bod.c graph.c -lm -lstdc++
-gcc -O3 -std=c++11 -o encodeB3hepv.o m.cpp -lm -lstdc++
-gcc -O3 -std=c99 -o b3hepvPathRetrieval.o b3hepvPathRetrieval.cpp hborWithB3hepv.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
+# gcc -O3 -std=c++11 -o encodeB3hepv.o m.cpp -lm -lstdc++
+gcc -O3 -std=c++11 -o encodeB3hepv.o encodingB3hepv_b.cpp dijkstraForBoundaryEPV.cpp boundaryPath.cpp -lm -lstdc++
+gcc -O3 -std=c99 -o b3hepvPathRetrieval.o b3hepvPathRetrieval.cpp hborWithB3hepv.cpp boundaryPath.cpp pathRetrieval.c heap.c boastar.c graph.c -lm -lstdc++
 
 
 MAP="test"
