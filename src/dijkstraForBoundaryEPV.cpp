@@ -17,6 +17,10 @@ Bi_objective_Search::Bi_objective_Search(const string& foldername) : folderpath(
     for (int i = 0; i < key_nodes.size(); i++) {
         nodeToIndex[key_nodes[i]] = i;
     }
+    
+     // Initialize each dimension of preComputedPaths with empty vectors
+    preComputedPaths = std::vector<std::vector<std::vector<BoundaryPath>>>(key_nodes.size(), std::vector<std::vector<BoundaryPath>>(key_nodes.size()));
+
 
 
     string filename = folderpath + "/boundaryNodePartition.json";
@@ -70,23 +74,33 @@ unordered_map<int, unordered_map<int, vector<int>>> Bi_objective_Search::createA
 
 
 
-
-std::vector<std::vector<BoundaryPath>> Bi_objective_Search::DijkstraTraverse(int start) {
+void Bi_objective_Search::DijkstraTraverse(int start) {
     // Use the HeapManager for the nodes to visit
     HeapManager heapManager;
     // Initial costs and start node, use the third heap which minimizes the (lb1, lb2)
     heapManager.pushToHeap(BoundaryPath({0, 0, 0, 0}, {start}), 3); 
+    
+    int startIndex = nodeToIndex[start];  // Get the index of the start node
+    // Seed the heap with reversed paths from preComputedPaths for nodes smaller than the current start node.
+    for (int destIndex = 0; destIndex < startIndex; ++destIndex) {
+        for (const BoundaryPath& bp : preComputedPaths[destIndex][startIndex]) {
+            heapManager.pushToHeap(bp.reverse(), 3);  
+        }
+    }
 
-    // Initialize the storage for paths
-    std::vector<std::vector<BoundaryPath>> pathsByEndNode(key_nodes.size());
-
+   
+    // since every possible paths that has smaller destination is already loaded, 
+    // for current popped path: if the destnode is smaller start node, skip the dominance check and do expansion diectly
+    // for the potential expended node: if the expended node is smaller start node, skip it
     while (!heapManager.isEmpty(3)) {
         BoundaryPath current = heapManager.popFromHeap(3);
-
-        if (current.endNode() != start) {
+        
+       
+        if (current.endNode() > start) {
             int index = nodeToIndex[current.endNode()]; 
             bool isDominated = false;
-            for (const BoundaryPath& existingPath : pathsByEndNode[index]) {
+            for (const BoundaryPath& existingPath : preComputedPaths[startIndex][index]) {
+                        
                 if (current.isDominatedBy(existingPath)) {
                     isDominated = true;
                     break;
@@ -94,7 +108,7 @@ std::vector<std::vector<BoundaryPath>> Bi_objective_Search::DijkstraTraverse(int
             }
 
             if (!isDominated) {
-                pathsByEndNode[index].push_back(current);
+                preComputedPaths[startIndex][index].push_back(current);
             }
             else {
                 continue;
@@ -102,27 +116,28 @@ std::vector<std::vector<BoundaryPath>> Bi_objective_Search::DijkstraTraverse(int
         }
 
         for (auto& neighbour : adjNodes[current.endNode()]) {
+
+            // all paths that has smaller destination are already in the heap
+            if(neighbour.first <= start){
+                continue;
+            }
             // Avoid nodes if previously visited
-            
-            
             if(std::find(current.path.begin(), current.path.end(), neighbour.first) != current.path.end()) {
                 continue;
             }
-            
+
+                       
             // Check the logic before inserting into heap
             if (current.path.size() >= 2) {  // At least two nodes in the path
                 int b = current.endNode();
                 int a = current.path[current.path.size() - 2];  // Second last node in the path
                 // no consecutive same partition
                 if (nodePartitionMap[b] == nodePartitionMap[neighbour.first] && 
-                    nodePartitionMap[a] == nodePartitionMap[b]) {
+                    nodePartitionMap[a] == nodePartitionMap[b]) {                                
                     continue;
                 }
-            } else if (current.path.size() == 1 && 
-                       nodePartitionMap[current.endNode()] == nodePartitionMap[neighbour.first]) {  
-                // Special case for first two nodes in the path
-                continue;
-            }
+            } 
+
             
             // avoid int overflow
             bool willOverflow = false;
@@ -133,6 +148,7 @@ std::vector<std::vector<BoundaryPath>> Bi_objective_Search::DijkstraTraverse(int
                 }
             }
             if (willOverflow) {
+               
                 continue;
             }
 
@@ -143,73 +159,103 @@ std::vector<std::vector<BoundaryPath>> Bi_objective_Search::DijkstraTraverse(int
                 current.lub[3] + neighbour.second[3]
             };
             
-            // if the new LUB is dominated by the existing LUBs, skip it.
-            int c2e_ccost1 = newLUB[0];
-            int c2e_ccost2 = newLUB[1];         
-            int c2e_excost1 = existingLUBs.at(start).at(neighbour.first)[0];
-            int c2e_excost2 = existingLUBs.at(start).at(neighbour.first)[1];
-            int c2e_excost3 = existingLUBs.at(start).at(neighbour.first)[2];
-            int c2e_excost4 = existingLUBs.at(start).at(neighbour.first)[3];
-            if (c2e_ccost1 >= c2e_excost1 && c2e_ccost2 >= c2e_excost4) {
-                if (!(c2e_ccost1 == c2e_excost1 && c2e_ccost2 == c2e_excost4)) {
-                    continue;
-                }
-            }
-            if (c2e_ccost2 >= c2e_excost2 && c2e_ccost1 >= c2e_excost3) {
-                if (!(c2e_ccost2 == c2e_excost2 && c2e_ccost1 == c2e_excost3)) {
-                    continue;
-                }
-            }
-                 
             // generate new path
             std::vector<int> newPath = current.path;
             newPath.push_back(neighbour.first);
             BoundaryPath newCosts(newLUB, newPath);
+            newCosts.updateTotalCostRecord(newLUB);
+
+            bool isSubpathDominated = isDominated_for_all_nodes(neighbour.first, newCosts);
+            if (isSubpathDominated) {
+                newCosts.printPath();
+                newCosts.printLub();
+                continue;
+            }
+            
             int index = nodeToIndex[neighbour.first];
             
-            // if the new path is not dominated by any existing boundary paths.
-            if (pathsByEndNode[index].empty() || 
-                !newCosts.isDominatedBy(pathsByEndNode[index].front())) {
+                         
+           // Check if the new path is dominated by any existing boundary paths.
+            bool isDominated = false;
+            for (const BoundaryPath& existingPath : preComputedPaths[startIndex][index]) {
+                if (newCosts.isDominatedBy(existingPath)) {
+                    isDominated = true;
+                      break;
+                }
+            }
+
+            if (!isDominated) {
+                // Insert new path into preComputedPaths and push to heap for exploration
                 heapManager.pushToHeap(newCosts, 3);
             }
         }
     }
 
-    return pathsByEndNode;
 }
 
+/* 
+    Input: expanded node, BoundaryPath containing the new costs and path
+    Output: boolean true or false
+    Function: For each pair between expanded node and respective node on the path, check if it is dominated or not
+*/
+bool Bi_objective_Search::isDominated_for_all_nodes(int expanded_node, const BoundaryPath& newCosts) {
+    const auto& total_cost_record = newCosts.total_cost_record;
+    const auto& path = newCosts.path;
 
+    for (int i = 0; i < total_cost_record.size() - 1; i++) { // We skip the last element since it's the s2e_current_cost
+        int subpathCost1 = total_cost_record.back()[0] - total_cost_record[i][0];
+        int subpathCost2 = total_cost_record.back()[1] - total_cost_record[i][1];
 
+        int c2e_excost1 = existingLUBs.at(path[i]).at(expanded_node)[0];
+        int c2e_excost2 = existingLUBs.at(path[i]).at(expanded_node)[1];
+        int c2e_excost3 = existingLUBs.at(path[i]).at(expanded_node)[2];
+        int c2e_excost4 = existingLUBs.at(path[i]).at(expanded_node)[3];
 
-
-
-bool Bi_objective_Search::dominates(const vector<int>& a, const vector<int>& b) {
-    for (size_t i = 0; i < 4; ++i) {
-        if (a[i] > b[i]) {
-            return false;
+        if (subpathCost1 >= c2e_excost1 && subpathCost2 >= c2e_excost4) {
+            if (!(subpathCost1 == c2e_excost1 && subpathCost2 == c2e_excost4)) {
+                return true;
+            }
+        }
+        if (subpathCost2 >= c2e_excost2 && subpathCost1 >= c2e_excost3) {
+            if (!(subpathCost2 == c2e_excost2 && subpathCost1 == c2e_excost3)) {
+                return true;
+            }
         }
     }
-    return true;
+    return false;
 }
+
+
+
+
+
+
 
 
 void Bi_objective_Search::allPairs() {
     int cnt = 0;
-    
-    for (int start : key_nodes) {
-        // DijkstraTraverse now returns vector of vector of BoundaryPath
-        std::vector<std::vector<BoundaryPath>> pathsGroups = DijkstraTraverse(start);
+    cout << key_nodes.size() << endl;
 
-        // Process each group of paths and convert them to the vector<int> form
-        for (const std::vector<BoundaryPath>& group : pathsGroups) {
-            for (const BoundaryPath& bp : group) {
-                allpath.push_back(bp.toVector());
+    for (int start : key_nodes) {
+        int startIndex = nodeToIndex[start];  // Get the index of the start node
+        int startPartition = nodePartitionMap[start];
+
+        // Call DijkstraTraverse for the current start node
+        DijkstraTraverse(start);
+
+        // Process each group of paths in preComputedPaths and convert them to the vector<int> form
+        for (int i = 0; i < preComputedPaths[startIndex].size(); i++) {
+            if (i <= startIndex) {
+                continue;  // Skip if end node index is not higher than start node index
+            }
+
+            for (const BoundaryPath& bp : preComputedPaths[startIndex][i]) {
+                if (nodePartitionMap[bp.path[1]] != startPartition){
+                    allpath.push_back(bp.toVector());
+                }
+             
             }
         }
-        
-        // Clear and release memory of pathsGroups
-        pathsGroups.clear();
-        std::vector<std::vector<BoundaryPath>>().swap(pathsGroups);
         
         if (cnt%100 ==0){
             cout << "done " << cnt << endl;
@@ -217,6 +263,7 @@ void Bi_objective_Search::allPairs() {
         cnt ++;
     }
 }
+
 
 
 

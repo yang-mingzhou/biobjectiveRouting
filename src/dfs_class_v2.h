@@ -309,6 +309,7 @@ class Bi_objective_DFS{
     {
         // enumerate all pairs
         // for (int i=0; i<key_nodes.size()-1; i++) {
+        cout << key_nodes.size() << endl;
         for (int i=0; i<key_nodes.size()-1; i++) {
 
             // set s_node, d_node, and respective cost

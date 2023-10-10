@@ -776,8 +776,18 @@ vector<BoundaryPath> B3HBORBasic::paretoBoundaryPathBetween(int snode, int dnode
     
 
     cout << "number of boundary paths before dominance check: " << boundaryPathSet.size() << endl;
+//     for (const BoundaryPath& bp : boundaryPathSet) {
+//         bp.printPath();  // Assuming BoundaryPath has a print method
+//         bp.printLub();  // Assuming BoundaryPath has a print method
+//         std::cout << "-------------------" << std::endl;  // Separator for clarity
+//     }
     boundaryPathSet = boundaryPathDominanceCheck(boundaryPathSet);
     cout << "number of boundary paths after dominance check: " << boundaryPathSet.size() << endl;
+//     for (const BoundaryPath& bp : boundaryPathSet) {
+//         bp.printPath();  // Assuming BoundaryPath has a print method
+//         bp.printLub();  // Assuming BoundaryPath has a print method
+//         std::cout << "-------------------" << std::endl;  // Separator for clarity
+//     }
 
     return boundaryPathSet;
 }

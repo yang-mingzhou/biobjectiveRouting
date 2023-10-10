@@ -61,10 +61,10 @@ $(HBORB_OBJ1): kahip.cpp
 $(HBORB_OBJ2): b3hepvPrecomputation.cpp b3hepv.cpp biobjectiveGraph.cpp bodPathRetrieval.c heap.c bod.c graph.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(C99FLAGS) -o $@ $^
 
-$(HBORB_OBJ3): m.cpp
+$(HBORB_OBJ3): encodingB3hepv_b.cpp dijkstraForBoundaryEPV.cpp boundaryPath.cpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ $^
 
-$(HBORB_OBJ4): b3hepvPathRetrieval.cpp hborWithB3hepv.cpp pathRetrieval.c heap.c boastar.c graph.c
+$(HBORB_OBJ4):b3hepvPathRetrieval.cpp hborWithB3hepv.cpp boundaryPath.cpp pathRetrieval.c heap.c boastar.c graph.c
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(C99FLAGS) -o $@ $^
 
 run_HBOR: HBOR

@@ -20,7 +20,7 @@ class Bi_objective_Search {
 public:
     Bi_objective_Search(const string& foldername);
 
-    std::vector<std::vector<BoundaryPath>> DijkstraTraverse(int start);
+    void DijkstraTraverse(int start);
     void allPairs();
     void save_all_path(string filetype);
     void convert_map_of_map_to_json_file();
@@ -37,7 +37,7 @@ private:
     
     vector<vector<int>> fileToVector(const string& filename);
     unordered_map<int, unordered_map<int, vector<int>>> createAdjNodes(vector< vector<int> > mapData);
-    bool dominates(const vector<int>& a, const vector<int>& b);
+    bool isDominated_for_all_nodes(int expanded_node, const BoundaryPath& newCosts);
 };
 
 

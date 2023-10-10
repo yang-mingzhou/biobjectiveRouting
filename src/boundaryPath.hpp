@@ -62,9 +62,18 @@ class BoundaryPath {
 
         return result;
     }
+    
+
+
+
+    void updateTotalCostRecord(const std::vector<int>& newLUB) {
+        total_cost_record.push_back(newLUB);
+    }
+
 
     std::vector<int> lub; // Contains 4 elements
     std::vector<int> path;
+    std::vector<std::vector<int>> total_cost_record;  // Cumulative LUB for each step
 
 };
 

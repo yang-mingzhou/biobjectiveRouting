@@ -16,9 +16,10 @@ int main(int argc, char** argv) {
     Bi_objective_Search bodSearch(foldername);
 
     bodSearch.allPairs();
+    std::cout<< "all pairs finished" << endl;
 
     bodSearch.save_all_path("json");
-
+    std::cout<< "saved" << endl;
     bodSearch.convert_map_of_map_to_json_file();
     auto endTimeTotal = std::chrono::high_resolution_clock::now();
     auto durationTotal = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeTotal - startTimeTotal);
