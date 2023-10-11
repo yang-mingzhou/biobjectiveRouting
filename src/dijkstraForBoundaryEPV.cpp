@@ -106,9 +106,7 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
     // for current popped path: if the destnode is smaller start node, skip the dominance check and do expansion diectly
     // for the potential expended node: if the expended node is smaller start node, skip it
     while (!heapManager.isEmpty(3)) {
-        BoundaryPath current = heapManager.popFromHeap(3);
-        
-
+        BoundaryPath current = heapManager.popFromHeap(3);  
        
         if (current.endNode() > start) {
             
@@ -123,10 +121,6 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
 
             if (!isDominated) {
                 // we only save the boundary path whose last two nodes are not in the same fragment
-//                 if (nodePartitionMap[current.path[current.path.size() - 1]] != nodePartitionMap[current.path[current.path.size() - 2]]) {
-//                      preComputedPaths[startIndex][index].push_back(current);
-//                 }
- 
                 preComputedPaths[startIndex][index].push_back(current);
             }
             else {
@@ -193,8 +187,7 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
             }
 
             // check is dominated by existing lubs
-            bool isSubpathDominated = isDominated_for_all_nodes(newCosts);
-            if (isSubpathDominated) {
+            if (isDominated_for_all_nodes(newCosts)) {
 //                 newCosts.printPath();
 //                 newCosts.printLub();
                 continue;
