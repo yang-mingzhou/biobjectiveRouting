@@ -40,11 +40,15 @@ class BoundaryPath {
     void printLub() const;
     bool isPreceeding(const BoundaryPath& other) const;
     BoundaryPath concatWith(const BoundaryPath& other) const;
+    
     BoundaryPath reverse() const {
         std::vector<int> reversed_path(path.rbegin(), path.rend());
-        return BoundaryPath(lub, reversed_path);
+        BoundaryPath reversed(lub, reversed_path);
+        reversed.firstConsecutiveSamePartition = lastConsecutiveSamePartition;
+        reversed.lastConsecutiveSamePartition = firstConsecutiveSamePartition;
+        return reversed;
     }
-    
+
     bool eq(const BoundaryPath& other) const {
         return path == other.path;
     }
@@ -74,6 +78,8 @@ class BoundaryPath {
     std::vector<int> lub; // Contains 4 elements
     std::vector<int> path;
     std::vector<std::vector<int>> total_cost_record;  // Cumulative LUB for each step
+    bool firstConsecutiveSamePartition = false;
+    bool lastConsecutiveSamePartition = false; 
 
 };
 

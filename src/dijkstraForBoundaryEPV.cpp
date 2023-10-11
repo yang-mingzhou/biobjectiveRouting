@@ -5,9 +5,6 @@ Bi_objective_Search::Bi_objective_Search(const string& foldername) : folderpath(
     vector< vector<int> > mapData = fileToVector(folderpath + "/adjacent_LUBs.txt");
     adjNodes = createAdjNodes(mapData);
 
-    vector< vector<int> > existings = fileToVector(folderpath + "/existingLUB.txt");
-    existingLUBs = createAdjNodes(existings);
-
     for (auto const &pair: adjNodes) {
         key_nodes.push_back(pair.first);
     }
@@ -17,6 +14,9 @@ Bi_objective_Search::Bi_objective_Search(const string& foldername) : folderpath(
     for (int i = 0; i < key_nodes.size(); i++) {
         nodeToIndex[key_nodes[i]] = i;
     }
+    
+    vector< vector<int> > existings = fileToVector(folderpath + "/existingLUB.txt");
+    existingLUBs = createAdjNodesVector(existings);
     
      // Initialize each dimension of preComputedPaths with empty vectors
     preComputedPaths = std::vector<std::vector<std::vector<BoundaryPath>>>(key_nodes.size(), std::vector<std::vector<BoundaryPath>>(key_nodes.size()));
@@ -72,6 +72,19 @@ unordered_map<int, unordered_map<int, vector<int>>> Bi_objective_Search::createA
     return adjNodes;
 }
 
+vector<vector<vector<int>>> Bi_objective_Search::createAdjNodesVector(const vector<vector<int>>& mapData) {
+    // Initialize with empty vectors given the size of key_nodes
+    vector<vector<vector<int>>> adjNodesVector(key_nodes.size(), vector<vector<int>>(key_nodes.size()));
+
+    for (const auto& edge : mapData) {
+        int sourceIndex = nodeToIndex[edge[0]];
+        int destIndex = nodeToIndex[edge[1]];
+        adjNodesVector[sourceIndex][destIndex] = {edge[2], edge[3], edge[4], edge[5]};
+    }
+
+    return adjNodesVector;
+}
+
 
 
 void Bi_objective_Search::DijkstraTraverse(int start) {
@@ -95,12 +108,13 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
     while (!heapManager.isEmpty(3)) {
         BoundaryPath current = heapManager.popFromHeap(3);
         
+
        
         if (current.endNode() > start) {
+            
             int index = nodeToIndex[current.endNode()]; 
             bool isDominated = false;
-            for (const BoundaryPath& existingPath : preComputedPaths[startIndex][index]) {
-                        
+            for (const BoundaryPath& existingPath : preComputedPaths[startIndex][index]) {                  
                 if (current.isDominatedBy(existingPath)) {
                     isDominated = true;
                     break;
@@ -108,13 +122,17 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
             }
 
             if (!isDominated) {
+                // we only save the boundary path whose last two nodes are not in the same fragment
+//                 if (nodePartitionMap[current.path[current.path.size() - 1]] != nodePartitionMap[current.path[current.path.size() - 2]]) {
+//                      preComputedPaths[startIndex][index].push_back(current);
+//                 }
+ 
                 preComputedPaths[startIndex][index].push_back(current);
             }
             else {
                 continue;
             }
         }
-
         for (auto& neighbour : adjNodes[current.endNode()]) {
 
             // all paths that has smaller destination are already in the heap
@@ -124,20 +142,7 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
             // Avoid nodes if previously visited
             if(std::find(current.path.begin(), current.path.end(), neighbour.first) != current.path.end()) {
                 continue;
-            }
-
-                       
-            // Check the logic before inserting into heap
-            if (current.path.size() >= 2) {  // At least two nodes in the path
-                int b = current.endNode();
-                int a = current.path[current.path.size() - 2];  // Second last node in the path
-                // no consecutive same partition
-                if (nodePartitionMap[b] == nodePartitionMap[neighbour.first] && 
-                    nodePartitionMap[a] == nodePartitionMap[b]) {                                
-                    continue;
-                }
-            } 
-
+            }       
             
             // avoid int overflow
             bool willOverflow = false;
@@ -147,8 +152,7 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
                     break;
                 }
             }
-            if (willOverflow) {
-               
+            if (willOverflow) {              
                 continue;
             }
 
@@ -163,17 +167,40 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
             std::vector<int> newPath = current.path;
             newPath.push_back(neighbour.first);
             BoundaryPath newCosts(newLUB, newPath);
-            newCosts.updateTotalCostRecord(newLUB);
+            newCosts.firstConsecutiveSamePartition = current.firstConsecutiveSamePartition;
+            newCosts.updateTotalCostRecord(newLUB);           
+                       
+            // Check if consective 3 nodes in the same fragment
+            if (current.path.size() >= 2) {  // At least two nodes in the path
+                int b = current.endNode();
 
-            bool isSubpathDominated = isDominated_for_all_nodes(neighbour.first, newCosts);
-            if (isSubpathDominated) {
-                newCosts.printPath();
-                newCosts.printLub();
-                continue;
+                // Check for consecutive same partition at the end
+                if (nodePartitionMap[b] == nodePartitionMap[neighbour.first]) {
+                    newCosts.lastConsecutiveSamePartition = true;
+                }
+
+                // Avoid adding paths with more than two consecutive nodes in the same partition at the end
+                if (newCosts.lastConsecutiveSamePartition && current.lastConsecutiveSamePartition) {
+                    continue;
+                }
             }
+            else {
+                // For paths of size 1, check the firstConsecutiveSamePartition flag
+                if (nodePartitionMap[start] == nodePartitionMap[neighbour.first]) {
+                    newCosts.firstConsecutiveSamePartition = true;
+                    newCosts.lastConsecutiveSamePartition = true;
+                }
+            }
+
+            // check is dominated by existing lubs
+            bool isSubpathDominated = isDominated_for_all_nodes(newCosts);
+            if (isSubpathDominated) {
+//                 newCosts.printPath();
+//                 newCosts.printLub();
+                continue;
+            }         
             
-            int index = nodeToIndex[neighbour.first];
-            
+            int index = nodeToIndex[neighbour.first];    
                          
            // Check if the new path is dominated by any existing boundary paths.
             bool isDominated = false;
@@ -198,18 +225,36 @@ void Bi_objective_Search::DijkstraTraverse(int start) {
     Output: boolean true or false
     Function: For each pair between expanded node and respective node on the path, check if it is dominated or not
 */
-bool Bi_objective_Search::isDominated_for_all_nodes(int expanded_node, const BoundaryPath& newCosts) {
+bool Bi_objective_Search::isDominated_for_all_nodes(const BoundaryPath& newCosts) {
     const auto& total_cost_record = newCosts.total_cost_record;
     const auto& path = newCosts.path;
+    int start = path.front();
+    int expandedNode = path.back();
+    int startIndex = nodeToIndex[start];
+    int expandedIndex = nodeToIndex[expandedNode];
+    
+    // Checking dominance for the complete path
+    int pathCost1 = total_cost_record.back()[0];
+    int pathCost2 = total_cost_record.back()[1];
 
-    for (int i = 0; i < total_cost_record.size() - 1; i++) { // We skip the last element since it's the s2e_current_cost
+    int entire_c2e_excost1 = existingLUBs[startIndex][expandedIndex][0];
+    int entire_c2e_excost2 = existingLUBs[startIndex][expandedIndex][1];
+    int entire_c2e_excost3 = existingLUBs[startIndex][expandedIndex][2];
+    int entire_c2e_excost4 = existingLUBs[startIndex][expandedIndex][3];
+
+    if ((pathCost1 >= entire_c2e_excost1 && pathCost2 >= entire_c2e_excost4 && !(pathCost1 == entire_c2e_excost1 && pathCost2 == entire_c2e_excost4)) 
+        || (pathCost2 >= entire_c2e_excost2 && pathCost1 >= entire_c2e_excost3 && !(pathCost2 == entire_c2e_excost2 && pathCost1 == entire_c2e_excost3))) {
+        return true;
+    }
+   
+    for (int i = 0; i < total_cost_record.size()-1; i++) { // We skip the last element since it's the s2e_current_cost
         int subpathCost1 = total_cost_record.back()[0] - total_cost_record[i][0];
         int subpathCost2 = total_cost_record.back()[1] - total_cost_record[i][1];
 
-        int c2e_excost1 = existingLUBs.at(path[i]).at(expanded_node)[0];
-        int c2e_excost2 = existingLUBs.at(path[i]).at(expanded_node)[1];
-        int c2e_excost3 = existingLUBs.at(path[i]).at(expanded_node)[2];
-        int c2e_excost4 = existingLUBs.at(path[i]).at(expanded_node)[3];
+        int c2e_excost1 = existingLUBs[nodeToIndex[path[i]]][expandedIndex][0];
+        int c2e_excost2 = existingLUBs[nodeToIndex[path[i]]][expandedIndex][1];
+        int c2e_excost3 = existingLUBs[nodeToIndex[path[i]]][expandedIndex][2];
+        int c2e_excost4 = existingLUBs[nodeToIndex[path[i]]][expandedIndex][3];
 
         if (subpathCost1 >= c2e_excost1 && subpathCost2 >= c2e_excost4) {
             if (!(subpathCost1 == c2e_excost1 && subpathCost2 == c2e_excost4)) {
@@ -222,8 +267,11 @@ bool Bi_objective_Search::isDominated_for_all_nodes(int expanded_node, const Bou
             }
         }
     }
+
+
     return false;
 }
+
 
 
 
@@ -235,7 +283,7 @@ bool Bi_objective_Search::isDominated_for_all_nodes(int expanded_node, const Bou
 void Bi_objective_Search::allPairs() {
     int cnt = 0;
     cout << key_nodes.size() << endl;
-
+    int pruned = 0;
     for (int start : key_nodes) {
         int startIndex = nodeToIndex[start];  // Get the index of the start node
         int startPartition = nodePartitionMap[start];
@@ -250,10 +298,14 @@ void Bi_objective_Search::allPairs() {
             }
 
             for (const BoundaryPath& bp : preComputedPaths[startIndex][i]) {
-                if (nodePartitionMap[bp.path[1]] != startPartition){
+                if (!bp.firstConsecutiveSamePartition && !bp.lastConsecutiveSamePartition){
                     allpath.push_back(bp.toVector());
                 }
-             
+                else {
+                    pruned++;
+                    
+                }
+                
             }
         }
         
@@ -262,6 +314,7 @@ void Bi_objective_Search::allPairs() {
         }
         cnt ++;
     }
+    cout << "pruned paths: " << pruned << endl;
 }
 
 

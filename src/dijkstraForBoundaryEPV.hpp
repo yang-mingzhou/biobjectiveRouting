@@ -26,7 +26,8 @@ public:
     void convert_map_of_map_to_json_file();
 
 private:
-    unordered_map<int, unordered_map<int, vector<int>>> adjNodes, existingLUBs;
+    unordered_map<int, unordered_map<int, vector<int>>> adjNodes; 
+    vector<vector<vector<int>>> existingLUBs;
     vector<vector<int>> allpath;
     vector<int> key_nodes;
     std::map<int, int> nodeToIndex;
@@ -37,7 +38,8 @@ private:
     
     vector<vector<int>> fileToVector(const string& filename);
     unordered_map<int, unordered_map<int, vector<int>>> createAdjNodes(vector< vector<int> > mapData);
-    bool isDominated_for_all_nodes(int expanded_node, const BoundaryPath& newCosts);
+    vector<vector<vector<int>>> createAdjNodesVector(const vector<vector<int>>& mapData);
+    bool isDominated_for_all_nodes(const BoundaryPath& newCosts);
 };
 
 

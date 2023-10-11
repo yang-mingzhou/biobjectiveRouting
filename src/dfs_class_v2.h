@@ -226,6 +226,13 @@ class Bi_objective_DFS{
                 bool currenInFragment;
                 if (nodePartitionMap[current_node]==nodePartitionMap[expanded]){
                     if (withInFragmentFlag){
+//                         cout<< "Short cut: current node: "<< current_node <<"; expand node: " << expanded << endl;
+//                         cout << "current partition: "<< nodePartitionMap[current_node] << "; next partition: "<< nodePartitionMap[expanded] << endl;
+//                         cout << "path->";
+//                         for (int i=0; i<path.size(); i++) {
+//                                 cout << path[i] << "->";
+//                             }
+//                         cout << endl;
                         continue;
                     }
                     else {
@@ -309,7 +316,6 @@ class Bi_objective_DFS{
     {
         // enumerate all pairs
         // for (int i=0; i<key_nodes.size()-1; i++) {
-        cout << key_nodes.size() << endl;
         for (int i=0; i<key_nodes.size()-1; i++) {
 
             // set s_node, d_node, and respective cost
