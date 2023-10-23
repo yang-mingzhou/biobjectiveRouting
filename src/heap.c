@@ -103,7 +103,7 @@ gnode* posheap_dij(int i) {
 }
 
 // --------------------------    Binary Heap for BOA*  -----------------------------------------
-#define HEAPSIZE 40000000
+#define HEAPSIZE 400000000
 snode* heap[HEAPSIZE];
 unsigned long int heapsize = 0;
 
@@ -156,6 +156,21 @@ void percolateupordown(int hole, snode* tmp) {
 }
 /* --------------------------------------------------------------- */
 void insertheap(snode* thiscell) {
+  if (thiscell == NULL) {
+    printf("Error: thiscell is NULL.\n");
+    return;
+  }
+
+  if (thiscell->heapindex < 0 || thiscell->heapindex >= HEAPSIZE) {
+    printf("Error: Invalid heap index %ld.\n", thiscell->heapindex);
+    return;
+  }
+
+  if (heapsize >= HEAPSIZE) {
+    printf("Error: Heap overflow. Current heapsize: %lu, Max HEAPSIZE: %d.\n", heapsize, HEAPSIZE);
+    return;
+  }
+
   if (thiscell->heapindex == 0)
     percolateup(++heapsize, thiscell);
   else

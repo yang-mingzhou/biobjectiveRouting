@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
+#include <sys/resource.h>
 
 gnode* graph_node;
 unsigned num_gnodes;
@@ -41,7 +42,7 @@ void allocateMemoryForTable(unsigned num_gnodes, unsigned num_arcs) {
         numNeighbors = 45;
     }
     else {
-        numNeighbors = 2000*numNeighbors;
+        numNeighbors = 3000*numNeighbors;
     }
 
     adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
@@ -69,6 +70,16 @@ void freeMemoryForTable(unsigned numNodes) {
     free(adjacent_table);
     free(pred_adjacent_table);
 }
+
+void print_memory_usage_bod(const char* annotation) {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) != 0) {
+        fprintf(stderr, "Could not get memory usage.\n");
+        return;
+    }
+    printf("Memory usage at %s: %ld KB\n", annotation, usage.ru_maxrss);
+}
+
 
 
 
@@ -140,6 +151,7 @@ int bod(BodSolutions* s_array) {
 //         solutions[n->state].number_of_solution = nsolutions+1;
         
         SolutionNode* new_sol_node = malloc(sizeof(SolutionNode));
+//         printf("Allocated SolutionNode at %p\n", (void*)new_sol_node);
         new_sol_node->solution[0] = n->g1;  // your solution values
         new_sol_node->solution[1] = n->g2;
         new_sol_node->next = s_array[n->state].head;
@@ -148,6 +160,7 @@ int bod(BodSolutions* s_array) {
         
         
         ++stat_expansions;
+        
 
         for (d = 1; d < adjacent_table[n->state][0] * 3; d += 3) {
             snode* pred;
@@ -159,27 +172,12 @@ int bod(BodSolutions* s_array) {
             unsigned newg1 = n->g1 + cost1;
             unsigned newg2 = n->g2 + cost2;
             
-//             if (start == 0){
-//                 printf("Expand node: %d%d%d\n", nsucc, cost1, cost2);
-//                 printf("Cost before: %d%d\n", n->g1, n->g2);
-//                 printf("Cost after: %d%d\n", newg1, newg2);
-//             }
-
             
 
             if (newg2 >= graph_node[nsucc].gmin)
                 continue;
             
-//             if (n->visited_in_this_path[nsucc])
-//                 continue;
- 
-//             if (next_recycled > 0) { //to reuse pruned nodes in memory
-//                 pred = recycled_nodes[--next_recycled];
-//             }
-//             else {
-//                 pred = new_node();
-//             }
-            pred = new_node();
+           pred = new_node();
             pred->state = nsucc;
             stat_generated++;
 
@@ -189,26 +187,17 @@ int bod(BodSolutions* s_array) {
             pred->g2 = newg2;
             pred->key = newkey;
             
-//             // Copy visited_in_this_path array from the current node to the new node
-//             memcpy(pred->visited_in_this_path, n->visited_in_this_path, num_gnodes * sizeof(int));
-//             // Mark the new node as visited in the new node's path
-//             pred->visited_in_this_path[nsucc] = 1;
-
             insertheap(pred);
         }
-         free_node(n);
-//         if (next_recycled < MAX_RECYCLE) {
-//             recycled_nodes[next_recycled++] = n;
-//         }
+        free_node(n);
     }
     int freeCnt;
     for(freeCnt=0;freeCnt < next_recycled;++freeCnt ){
         free_node(recycled_nodes[freeCnt]);
     }
-
     return 1;
+    
 }
-
 /* ------------------------------------------------------------------------------*/
 BodSolutions* call_bod() {
     float runtime;

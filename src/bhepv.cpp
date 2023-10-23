@@ -437,12 +437,10 @@ void BHEPV::bodPathRetrievalForFragmentEncodedPathView(int snode, int fragmentId
     for (unsigned i = 0; i < currentGraph.numOfGnode; ++i) {
         if (i != snodeInFragment-1){
             int originID = fragmentIdToOriginId[fragmentId][i+1];
-//             cout<< "snode: " << snode << " , dnode: " << originID<<endl;
             std::vector<std::vector<int>> solution_list;
             std::vector<std::vector<int>> pairWise_solution_list;
             SolutionNode* current = solutions_array[i].head;
             while (current != NULL) {
-//                 cout<< "BOD result: snode: " << snode << " , dnode: " << originID<< ", " << current->solution[0] << ", " << current->solution[1]<<endl;
                 std::vector<int> solution({current->solution[0], current->solution[1]});
                 pairWise_solution_list.push_back({snode, originID, current->solution[0], current->solution[1]}); // revise
                 solution_list.push_back(solution);
@@ -452,14 +450,7 @@ void BHEPV::bodPathRetrievalForFragmentEncodedPathView(int snode, int fragmentId
             }
             fragmentEncodedPathView[snode][originID] = solution_list;
             if (isBoundaryNode(originID-1)){
-//                 cout<< "BoundaryGraph: snode: " << snode << " , dnode: " << originID << endl;
                 boundaryGraph.insert(boundaryGraph.end(), pairWise_solution_list.begin(), pairWise_solution_list.end());
-//                 for(const auto& vec : boundaryGraph) {
-//                     for(const auto& value : vec) {
-//                         std::cout <<  "BoundaryGraph: " << value << ' ';
-//                     }
-//                     std::cout << '\n';
-//                 }
             }   
         }
         else {
@@ -475,6 +466,7 @@ void BHEPV::bodPathRetrievalForFragmentEncodedPathView(int snode, int fragmentId
     free(solutions_array);
     
 }
+
 
 void BHEPV::encodeFragmentPathView(){
 //     for (const auto& innerVec : boundaryNodeSet) {
@@ -540,18 +532,42 @@ void BHEPV::encodeFragmentPathView(){
 
 void BHEPV::encodeBoundaryPathView() {
     // Initialize the graph data
+    print_memory_usage("Start of function");
+    std::cout<< "boundaryNodes.size(): "<< boundaryNodes.size() << endl;
+    std::cout<< "boundaryGraph.size(): "<< boundaryGraph.size() << endl;
     GraphData graphData;
     bod_initializeGraphData(&graphData, boundaryNodes.size(), boundaryGraph.size());
+    
+    print_memory_usage("After bod_initializing graphData");
+    
     for (unsigned i = 0; i < boundaryGraph.size(); ++i) {
+        // Check if keys exist in the map
+        if(boundaryIdMap.find(boundaryGraph[i][0]) == boundaryIdMap.end() || 
+           boundaryIdMap.find(boundaryGraph[i][1]) == boundaryIdMap.end()) {
+            std::cout << "Key not found in map!" << std::endl;
+            continue;
+        }
+
+        // Verify array allocation
+        if (graphData.edgeVectors == nullptr || graphData.edgeVectors[i] == nullptr) {
+            std::cout << "Memory not properly allocated!" << std::endl;
+            continue;
+        }
+
         graphData.edgeVectors[i][0] = boundaryIdMap[boundaryGraph[i][0]];
         graphData.edgeVectors[i][1] = boundaryIdMap[boundaryGraph[i][1]];
         graphData.edgeVectors[i][2] = boundaryGraph[i][2];
         graphData.edgeVectors[i][3] = boundaryGraph[i][3];
     }
 
+     
+    print_memory_usage("After initializing graphData");
+    
     // Compute all-to-all Pareto paths once
     const GraphData* graphDataPtr = &graphData;
     AllToAllSolutions* all_solutions = compute_all_to_all_paretoPaths_optimized(graphDataPtr);
+    
+    print_memory_usage("After compute_all_to_all_paretoPaths_optimized");
 
     // Loop through each node in boundaryIdMap
     int cnt = 0;
@@ -614,15 +630,21 @@ void BHEPV::loadFragmentIndex(){
 
 
 void BHEPV::PrecomputationAndSave(){
+    print_memory_usage("Before computation");
     readOriginGraph();
+    print_memory_usage("Read origin graph");
     readPartition();
+    print_memory_usage("Read partition");
     updateBoundaryNodes();
+    print_memory_usage("Update boundary node");
     // generating fragment graphs
     generateAndSaveFragments();
+    print_memory_usage("Save fragments");
     loadFragmentIndex();
     loadBoundaryNodes();
     // FOR EACH fragment, bod for all boundaryNode within fragment => output fragment encoded path view 
     encodeFragmentPathView();
+    print_memory_usage("Encode fragment epv");
     // Generate boundary multigraph based on fragment encoded path view
     saveBoundaryGraph();
     cout<< "Boundary Graph Saved" << endl;

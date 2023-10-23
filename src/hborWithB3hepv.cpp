@@ -28,11 +28,12 @@ void B3HBORBasic::loadEncodedPathView() {
     std::ifstream i_fepv(fileNameFragmentEPV);
     json j_fepv;
     i_fepv >> j_fepv;
-
+    
+    
     // Clear existing data
     fragmentEncodedPathView.clear();
     int cnt_FragmentPath = 0;
-    // Populate boundaryEncodedPathView from json
+    // load boundaryEncodedPathView from json
     for (json::iterator it = j_fepv.begin(); it != j_fepv.end(); ++it) {
         int outerKey = std::stoi(it.key());
         for (json::iterator inner_it = it.value().begin(); inner_it != it.value().end(); ++inner_it) {

@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/resource.h>
 
 void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
     graphData->numOfGnode = num_nodes;
@@ -47,12 +48,52 @@ void bod_assign_global_variables(const GraphData* graphData) {
     num_gnodes = graphData->numOfGnode;
 	int num_arcs = graphData->numOfArcs;
     
-    allocateMemoryForTable(num_gnodes, num_arcs);
+//     allocateMemoryForTable(num_gnodes, num_arcs);
+    
+    // Step 1: Create temporary arrays to hold the counts
+    unsigned *adj_count = calloc(num_gnodes, sizeof(unsigned));
+    unsigned *pred_count = calloc(num_gnodes, sizeof(unsigned));
+    
 
-	for (i = 0; i < num_gnodes; i++){
+
+    // Step 2: Scan the arc data
+    for (int i = 0; i < num_arcs; ++i) {
+        int ori = graphData->edgeVectors[i][0];
+        int dest = graphData->edgeVectors[i][1];
+        adj_count[ori - 1]++;
+        pred_count[dest - 1]++;
+    }
+
+    // Step 3: Allocate memory based on the counts
+    adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    pred_adjacent_table = malloc(num_gnodes * sizeof(unsigned *));
+    
+    if (adjacent_table == NULL || pred_adjacent_table == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    for (unsigned i = 0; i < num_gnodes; ++i) {
+        // For each node, allocate 3 times the count of neighbors (for storing dest, dist, and t)
+        adjacent_table[i] = malloc((1+adj_count[i] * 3) * sizeof(unsigned));
+        pred_adjacent_table[i] = malloc((1+pred_count[i] * 3) * sizeof(unsigned));
+        
+        if (adjacent_table[i] == NULL || pred_adjacent_table[i] == NULL) {
+            fprintf(stderr, "Memory allocation failed\n");
+            exit(1);
+        }
+
+
+        // Initialize the count of neighbors at the first index
         adjacent_table[i][0] = 0;
         pred_adjacent_table[i][0] = 0;
     }
+
+
+// 	for (i = 0; i < num_gnodes; i++){
+//         adjacent_table[i][0] = 0;
+//         pred_adjacent_table[i][0] = 0;
+//     }
 		
 
     
@@ -75,19 +116,22 @@ void bod_assign_global_variables(const GraphData* graphData) {
 		pred_adjacent_table[dest - 1][pred_adjacent_table[dest - 1][0] * 3] = t;
 	}
 //     printf("finished assignedc: %d\n", i);
+        
+    free(adj_count);
+    free(pred_count);
+
 }
 
 void bod_freeSolutions(BodSolutions* solutions) {
     SolutionNode* current = solutions->head;
     SolutionNode* next_node;
-    
+//     printf("Head of solutions list before freeing: %p\n", (void*)solutions->head);
     while (current != NULL) {
         next_node = current->next;  
+//         printf("Freed SolutionNode at %p\n", (void*)current);
         free(current);             
         current = next_node;      
     }
-
-    free(solutions); 
 }
 
 
@@ -120,52 +164,133 @@ BodSolutions* bod_paretoPathsInFragmentChar(int s_node, const char* filename){
 
 
 AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* graphData) {
+    print_memory_usage("Start of function");
     int num_nodes = graphData->numOfGnode;
     AllToAllSolutions* all_solutions = (AllToAllSolutions*) malloc(sizeof(AllToAllSolutions));
     all_solutions->num_nodes = num_nodes;
-
-    // Allocate memory for the 2D array of solutions
     all_solutions->solutions = (BodSolutions**) malloc(num_nodes * sizeof(BodSolutions*));
-    for (int i = 0; i < num_nodes; ++i) {
-        all_solutions->solutions[i] = (BodSolutions*) malloc(num_nodes * sizeof(BodSolutions));
-    }
+//     for (int i = 0; i < num_nodes; ++i) {
+//         all_solutions->solutions[i] = (BodSolutions*) malloc(num_nodes * sizeof(BodSolutions));
+//     }
+//     BodSolutions* block = malloc(num_nodes * num_nodes * sizeof(BodSolutions));
+//     for(int i = 0; i < num_nodes; ++i) {
+//         all_solutions->solutions[i] = &block[i * num_nodes];
+//     }
+    print_memory_usage("After allocating all_solutions");
 
     // Initialize global variables and allocate memory once
     num_gnodes = graphData->numOfGnode;
     bod_assign_global_variables(graphData);
     new_graph();
-
+    print_memory_usage("Before call_bod()");
     // Compute Pareto paths from each node to all other nodes
-    for (int i = 0; i < num_nodes; ++i) {
+    for (int i = 0; i < num_nodes; ++i) {      
         start = i;  // Set the global start variable directly
         BodSolutions* result = call_bod();
         all_solutions->solutions[i] = result;
         // Log the current status every 100 iterations
-        if ((i + 1) % 100 == 0) {
+        if ((i) % 1 == 0) {
             printf("Processed node %d out of %d\n", i + 1, num_nodes);
+            char buffer[100];
+            snprintf(buffer, sizeof(buffer), "After call_bod() for i=%d", i);
+            print_memory_usage(buffer);
         }
     }
 
     // Free allocated memory for the graph data structure
     freeMemoryForTable(num_gnodes);
+    print_memory_usage("End of function");
     return all_solutions;
 }
 
+// void free_all_to_all_solutions(AllToAllSolutions* all_solutions) {
+//     if (all_solutions == NULL) {
+//         printf("all_solutions is NULL. Skipping free.\n");
+//         return;
+//     }
+
+//     int num_nodes = all_solutions->num_nodes;
+//     if (all_solutions->solutions != NULL) {
+//         for (int i = 0; i < num_nodes; ++i) {
+//             BodSolutions* solutions_array = all_solutions->solutions[i];
+//             if (solutions_array != NULL) {
+//                 bod_freeSolutions(solutions_array);
+//             }
+//         }
+//         free(all_solutions->solutions);
+//     }
+//     free(all_solutions);
+// }
+
 void free_all_to_all_solutions(AllToAllSolutions* all_solutions) {
     if (all_solutions == NULL) {
+//         printf("all_solutions is NULL. Skipping free.\n");
         return;
     }
 
     int num_nodes = all_solutions->num_nodes;
+
+    // Free each array of BodSolutions
     if (all_solutions->solutions != NULL) {
         for (int i = 0; i < num_nodes; ++i) {
             BodSolutions* solutions_array = all_solutions->solutions[i];
             if (solutions_array != NULL) {
-                bod_freeSolutions(solutions_array);
+                for(int j = 0; j < num_nodes; j++) {
+                    bod_freeSolutions(&solutions_array[j]);
+                }
+                
+                // Free the array itself
+                free(solutions_array);
+                all_solutions->solutions[i] = NULL;
             }
         }
+
+        // Free the array of BodSolutions arrays
         free(all_solutions->solutions);
+        all_solutions->solutions = NULL;
     }
+
+    // Free the AllToAllSolutions struct
     free(all_solutions);
+    all_solutions = NULL;
+}
+
+
+
+
+// void free_all_to_all_solutions(AllToAllSolutions* all_solutions) {
+//     if (all_solutions == NULL) {
+//         return;
+//     }
+
+//     int num_nodes = all_solutions->num_nodes;
+
+//     if (all_solutions->solutions != NULL) {
+//         // Free each linked list within each BodSolutions object
+//         for (int i = 0; i < num_nodes; ++i) {
+//             BodSolutions* solutions_array = all_solutions->solutions[i];
+//             if (solutions_array != NULL) {
+//                 bod_freeSolutions(solutions_array);
+//             }
+//         }
+
+//         // Free the single block of BodSolutions, assuming the first row is the start of the block.
+//         free(all_solutions->solutions[0]);
+
+//         // Free the array of pointers
+//         free(all_solutions->solutions);
+//     }
+
+//     // Free the AllToAllSolutions struct itself
+//     free(all_solutions);
+// }
+
+void print_memory_usage(const char* annotation) {
+    struct rusage usage;
+    if (getrusage(RUSAGE_SELF, &usage) != 0) {
+        fprintf(stderr, "Could not get memory usage.\n");
+        return;
+    }
+    printf("Memory usage at %s: %ld KB\n", annotation, usage.ru_maxrss);
 }
 

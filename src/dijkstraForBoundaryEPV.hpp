@@ -19,7 +19,7 @@ using json = nlohmann::json;
 class Bi_objective_Search {
 public:
     Bi_objective_Search(const string& foldername);
-
+    ~Bi_objective_Search(); 
     void DijkstraTraverse(int start);
     void allPairs();
     void save_all_path(string filetype);
@@ -35,7 +35,7 @@ private:
     std::unordered_map<int, int> nodePartitionMap;
     int current_s_node;
     vector<vector<vector<BoundaryPath>>> preComputedPaths;
-    
+    std::map<int, std::map<int, std::vector<std::vector<int>>>> fragmentEncodedPathView;
     vector<vector<int>> fileToVector(const string& filename);
     unordered_map<int, unordered_map<int, vector<int>>> createAdjNodes(vector< vector<int> > mapData);
     vector<vector<vector<int>>> createAdjNodesVector(const vector<vector<int>>& mapData);

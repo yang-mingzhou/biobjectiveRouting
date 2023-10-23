@@ -46,12 +46,23 @@ class BoundaryPath {
         BoundaryPath reversed(lub, reversed_path);
         reversed.firstConsecutiveSamePartition = lastConsecutiveSamePartition;
         reversed.lastConsecutiveSamePartition = firstConsecutiveSamePartition;
+        reversed.elbow_point = elbow_point;
         return reversed;
     }
 
     bool eq(const BoundaryPath& other) const {
         return path == other.path;
     }
+    
+    void setElbowPoint(int x, int y) {
+        elbow_point = std::make_pair(x, y);
+    }
+    
+    void updateElbowPoint(int x, int y) {
+        this->elbow_point.first += x;
+        this->elbow_point.second += y;
+    }
+
     
     std::vector<int> toVector() const {
         // Initialize the vector with the lub values
@@ -67,19 +78,26 @@ class BoundaryPath {
         return result;
     }
     
-
-
-
     void updateTotalCostRecord(const std::vector<int>& newLUB) {
         total_cost_record.push_back(newLUB);
     }
+    
+    bool isDominatedByElbowPointOf(const BoundaryPath& other) const {
+        // Check if lub[0] and lub[1] are dominated by the elbow point of the other path
+        return (lub[0] >= other.elbow_point.first && lub[1] >= other.elbow_point.second) && 
+               (lub[0] > other.elbow_point.first || lub[1] > other.elbow_point.second);
+    }
+
 
 
     std::vector<int> lub; // Contains 4 elements
     std::vector<int> path;
+    std::pair<int, int> elbow_point;  // new member variable for elbow point
     std::vector<std::vector<int>> total_cost_record;  // Cumulative LUB for each step
     bool firstConsecutiveSamePartition = false;
     bool lastConsecutiveSamePartition = false; 
+    BoundaryPath* parent;
+    bool hasParent;
 
 };
 

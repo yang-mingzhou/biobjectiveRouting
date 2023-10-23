@@ -27,7 +27,7 @@ BodSolutions* bod_paretoPathsInFragmentChar(int s_node, const char* filename);
     
 AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* graphData);
 void free_all_to_all_solutions(AllToAllSolutions* all_solutions);
-
+void print_memory_usage(const char* annotation);
     
 // void myCFunction(struct GraphData* graphData);
 

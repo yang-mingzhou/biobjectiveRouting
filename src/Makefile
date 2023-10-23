@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3 -g
+CFLAGS = -O3 -mcmodel=medium
 CPPFLAGS = -std=c++11 -lstdc++
 C99FLAGS = -std=c99 -lm -lstdc++
 

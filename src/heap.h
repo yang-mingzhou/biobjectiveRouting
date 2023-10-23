@@ -7,7 +7,7 @@
 #define HEAPH
 
 #include "node.h"
-
+#include <stdio.h> 
 extern unsigned long int heapsize;
 extern unsigned long int stat_percolations;
 
