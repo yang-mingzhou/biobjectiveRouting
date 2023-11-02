@@ -532,7 +532,7 @@ void BHEPV::encodeFragmentPathView(){
 
 void BHEPV::encodeBoundaryPathView() {
     // Initialize the graph data
-    print_memory_usage("Start of function");
+    print_memory_usage("Start of function encodeBoundaryPathView");
     std::cout<< "boundaryNodes.size(): "<< boundaryNodes.size() << endl;
     std::cout<< "boundaryGraph.size(): "<< boundaryGraph.size() << endl;
     GraphData graphData;

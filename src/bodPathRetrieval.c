@@ -189,8 +189,8 @@ AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* gra
         BodSolutions* result = call_bod();
         all_solutions->solutions[i] = result;
         // Log the current status every 100 iterations
-        if ((i) % 1 == 0) {
-            printf("Processed node %d out of %d\n", i + 1, num_nodes);
+        if ((i) % 100 == 0) {
+//             printf("Processed node %d out of %d\n", i + 1, num_nodes);
             char buffer[100];
             snprintf(buffer, sizeof(buffer), "After call_bod() for i=%d", i);
             print_memory_usage(buffer);
