@@ -8,22 +8,68 @@
 #include <string.h>
 #include <sys/resource.h>
 
+// void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
+//     graphData->numOfGnode = num_nodes;
+//     graphData->numOfArcs = num_arcs;
+
+//     graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
+//     for (int i = 0; i < num_arcs; i++) {
+//         graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
+//     }
+// }
+
 void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
+    printf("bod_initializeGraphData:\n");
     graphData->numOfGnode = num_nodes;
     graphData->numOfArcs = num_arcs;
+    
+    print_memory_usage("start of bod_initializeGraphData");
+
+    // Allocate all edge vectors at once
+    int* block = (int*)malloc(num_arcs * 4 * sizeof(int));
+    if (!block) {
+        // Handle memory allocation failure, perhaps by returning an error code.
+        fprintf(stderr, "Error allocating memory for edge vectors.\n");
+        return; // Or exit, or handle the error as appropriate for your application.
+    }
+    print_memory_usage("allocate block");
 
     graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
+    if (!graphData->edgeVectors) {
+        // Handle memory allocation failure.
+        fprintf(stderr, "Error allocating memory for edge vector pointers.\n");
+        free(block); // Clean up previously allocated memory before returning.
+        return; // Or exit, or handle the error as appropriate for your application.
+    }
+    print_memory_usage("allocate edgeVectors");
+    
+
+    // Assign pointers to the appropriate locations in the single memory block
     for (int i = 0; i < num_arcs; i++) {
-        graphData->edgeVectors[i] = (int*)malloc(4 * sizeof(int));
+        graphData->edgeVectors[i] = block + i * 4;
     }
 }
 
+
+// void bod_cleanupGraphData(GraphData* graphData) {
+//     for (int i = 0; i < graphData->numOfArcs; i++) {
+//         free(graphData->edgeVectors[i]);
+//     }
+//     free(graphData->edgeVectors);
+// }
+
 void bod_cleanupGraphData(GraphData* graphData) {
-    for (int i = 0; i < graphData->numOfArcs; i++) {
-        free(graphData->edgeVectors[i]);
+    // Only free the block of memory if it was allocated.
+    if (graphData->edgeVectors) {
+        // Since all edge vectors were allocated in a single block, only one free is required.
+        // Free the block that graphData->edgeVectors[0] points to, which is the first vector.
+        free(graphData->edgeVectors[0]);
     }
+
+    // Now free the array of pointers.
     free(graphData->edgeVectors);
 }
+
 
 void bod_printEdgeVectors(const GraphData* graphData) {
     int num_arcs = graphData->numOfArcs;

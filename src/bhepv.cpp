@@ -477,7 +477,7 @@ void BHEPV::encodeFragmentPathView(){
 //     }
 
     for (int i; i< boundaryNodeSet.size(); ++i){
-        std::cout<< "Ecoding fragment: "<< i+1 << "out of " << nPartitions << endl;
+        std::cout<< "Encoding fragment: "<< i+1 << "out of " << nPartitions << endl;
 
         
         int fragmentId = i;
@@ -536,6 +536,7 @@ void BHEPV::encodeBoundaryPathView() {
     std::cout<< "boundaryNodes.size(): "<< boundaryNodes.size() << endl;
     std::cout<< "boundaryGraph.size(): "<< boundaryGraph.size() << endl;
     GraphData graphData;
+    std::cout<< "before initialize boundaryGraph" << endl;
     bod_initializeGraphData(&graphData, boundaryNodes.size(), boundaryGraph.size());
     
     print_memory_usage("After bod_initializing graphData");

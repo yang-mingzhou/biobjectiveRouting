@@ -98,6 +98,7 @@ void HBORBasic::loadFragments() {
         // cleanupGraphData(&graphData);
     }
 }
+
 void HBORBasic::readGraphDataFromFile(GraphData* graphData, const std::string& filename) {
     std::ifstream file(filename);
     if (!file) {
