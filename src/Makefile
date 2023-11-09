@@ -48,6 +48,7 @@ $(B3HBOR_OBJ4): onlineRouting.cpp hbor.cpp biobjectiveGraph.cpp pathRetrieval.c 
 
 
 run_HBOR: HBOR
+	mkdir -p ../bhepv/$(MAP)/fragments
 	./kahip.o ../Maps/${MAP}-road-d.txt ../bhepv/${MAP}/kahip.graph
 	../../kahip/KaHIP/deploy/graphchecker ../bhepv/${MAP}/kahip.graph 
 	../../kahip/KaHIP/deploy/kaffpa ../bhepv/${MAP}/kahip.graph --output_filename=../bhepv/${MAP}/kaffpaIndex.txt --k ${NPARTITIONS} --preconfiguration=strong
@@ -56,6 +57,7 @@ run_HBOR: HBOR
 	./namoadrPathRetrievalWorkFlow.o ${MAP} ${NPARTITIONS}
 
 run_B3HBOR: B3HBOR
+	mkdir -p ../b3hepv/$(MAP)/fragments
 	./kahip.o ../Maps/${MAP}-road-d.txt ../b3hepv/${MAP}/kahip.graph
 	../../kahip/KaHIP/deploy/graphchecker ../b3hepv/${MAP}/kahip.graph 
 	../../kahip/KaHIP/deploy/kaffpa ../b3hepv/${MAP}/kahip.graph --output_filename=../b3hepv/${MAP}/kaffpaIndex.txt --k ${NPARTITIONS} --preconfiguration=strong
@@ -65,4 +67,4 @@ run_B3HBOR: B3HBOR
 
 
 clean:
-	rm -f $(HBOR_OBJ1) $(HBOR_OBJ2) $(HBOR_OBJ3) $(HBOR_OBJ4) $(B3HBOR_OBJ1) $(B3HBOR_OBJ2) $(B3HBOR_OBJ3) $(B3HBOR_OBJ4) 
+	rm -f $(HBOR_OBJ1) $(HBOR_OBJ2) $(HBOR_OBJ3) $(HBOR_OBJ4) $(B3HBOR_OBJ1) $(B3HBOR_OBJ2) $(B3HBOR_OBJ3) $(B3HBOR_OBJ4)

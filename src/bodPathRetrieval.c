@@ -19,11 +19,11 @@
 // }
 
 void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) {
-    printf("bod_initializeGraphData:\n");
+//     printf("bod_initializeGraphData:\n");
     graphData->numOfGnode = num_nodes;
     graphData->numOfArcs = num_arcs;
     
-    print_memory_usage("start of bod_initializeGraphData");
+//     print_memory_usage("start of bod_initializeGraphData");
 
     // Allocate all edge vectors at once
     int* block = (int*)malloc(num_arcs * 4 * sizeof(int));
@@ -32,7 +32,7 @@ void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) 
         fprintf(stderr, "Error allocating memory for edge vectors.\n");
         return; // Or exit, or handle the error as appropriate for your application.
     }
-    print_memory_usage("allocate block");
+//     print_memory_usage("allocate block");
 
     graphData->edgeVectors = (int**)malloc(num_arcs * sizeof(int*));
     if (!graphData->edgeVectors) {
@@ -41,7 +41,7 @@ void bod_initializeGraphData(GraphData* graphData, int num_nodes, int num_arcs) 
         free(block); // Clean up previously allocated memory before returning.
         return; // Or exit, or handle the error as appropriate for your application.
     }
-    print_memory_usage("allocate edgeVectors");
+//     print_memory_usage("allocate edgeVectors");
     
 
     // Assign pointers to the appropriate locations in the single memory block
@@ -210,7 +210,7 @@ BodSolutions* bod_paretoPathsInFragmentChar(int s_node, const char* filename){
 
 
 AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* graphData) {
-    print_memory_usage("Start of function");
+//     print_memory_usage("Start of function");
     int num_nodes = graphData->numOfGnode;
     AllToAllSolutions* all_solutions = (AllToAllSolutions*) malloc(sizeof(AllToAllSolutions));
     all_solutions->num_nodes = num_nodes;
@@ -222,13 +222,13 @@ AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* gra
 //     for(int i = 0; i < num_nodes; ++i) {
 //         all_solutions->solutions[i] = &block[i * num_nodes];
 //     }
-    print_memory_usage("After allocating all_solutions");
+//     print_memory_usage("After allocating all_solutions");
 
     // Initialize global variables and allocate memory once
     num_gnodes = graphData->numOfGnode;
     bod_assign_global_variables(graphData);
     new_graph();
-    print_memory_usage("Before call_bod()");
+//     print_memory_usage("Before call_bod()");
     // Compute Pareto paths from each node to all other nodes
     for (int i = 0; i < num_nodes; ++i) {      
         start = i;  // Set the global start variable directly
@@ -239,13 +239,13 @@ AllToAllSolutions* compute_all_to_all_paretoPaths_optimized(const GraphData* gra
 //             printf("Processed node %d out of %d\n", i + 1, num_nodes);
             char buffer[100];
             snprintf(buffer, sizeof(buffer), "After call_bod() for i=%d", i);
-            print_memory_usage(buffer);
+//             print_memory_usage(buffer);
         }
     }
 
     // Free allocated memory for the graph data structure
     freeMemoryForTable(num_gnodes);
-    print_memory_usage("End of function");
+//     print_memory_usage("End of function");
     return all_solutions;
 }
 
