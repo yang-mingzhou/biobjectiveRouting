@@ -2,6 +2,7 @@ boa
 bod
 namoadr
 .vscode/*
+Maps/*.txt
 dfs_100_pair/output
 dfs_100_pair/test
 dfs_100_pair/output/*.output
@@ -9,7 +10,8 @@ dfs_100_pair/output/*.error
 *.sbatch
 output
 src/*.o
-b3hepv
-bhepv
-*.ipynb_checkpoints
-src/.*
+*.swp
+*/.ipynb_checkpoints/*
+b3hepv/
+bhepv/
+.ipynb_checkpoints/
